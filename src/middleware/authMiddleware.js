@@ -1,7 +1,8 @@
 // src/middleware/authMiddleware.js
 
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your-super-secret-key-that-should-be-in-a-env-file'; // Ensure this matches your authController
+//const JWT_SECRET = 'your-super-secret-key-that-should-be-in-a-env-file'; // Ensure this matches your authController
+const process.env.JWT_SECRET = process.env.JWT_SECRET; // Ensure this matches your authController
 
 module.exports = function(req, res, next) {
   // Get token from header

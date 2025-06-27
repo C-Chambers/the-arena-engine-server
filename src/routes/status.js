@@ -54,7 +54,7 @@ module.exports = function(gameManager) {
     html += `
         <script>
           // Connect to the explicit /status-ws WebSocket endpoint
-          const ws = new WebSocket('ws://' + window.location.host + '/status-ws'); 
+          const ws = new WebSocket('wss://' + window.location.host + '/status-ws'); 
           const statusDot = document.getElementById('status-dot');
           const statusText = document.getElementById('status-text');
 
