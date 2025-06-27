@@ -1,0 +1,59 @@
+// src/services/characterService.js
+
+const { pool } = require('../config/database');
+
+let characterCache = [];
+let chakraTypeCache = [];
+
+const loadAllGameData = async () => {
+  try {
+    console.log('Loading all character, skill, and chakra data from database...');
+    
+    // --- Load Characters and Skills ---
+    // Corrected the SQL query to include all selected columns in the GROUP BY clause.
+    const charactersQuery = `
+      SELECT
+        c.character_id,
+        c.name,
+        c.max_hp,
+        c.image_url,
+        json_agg(
+          json_build_object(
+            'id', s.skill_id, 'name', s.name, 'description', s.description,
+            'cost', s.cost, 'effects', s.effects
+          )
+        ) FILTER (WHERE s.skill_id IS NOT NULL) AS skills
+      FROM arena_engine_schema.characters AS c
+      LEFT JOIN arena_engine_schema.skills AS s ON c.character_id = s.character_id
+      GROUP BY c.character_id, c.name, c.max_hp, c.image_url;
+    `;
+    const { rows: characterRows } = await pool.query(charactersQuery);
+    
+    characterCache = characterRows.map(row => ({
+        id: row.character_id,
+        name: row.name,
+        maxHp: row.max_hp,
+        imageUrl: row.image_url, // This should now have the correct data
+        skills: row.skills || [],
+    }));
+    console.log(`✅ Successfully loaded ${characterCache.length} characters.`);
+
+    // --- Load Chakra Types ---
+    const chakraQuery = 'SELECT name FROM arena_engine_schema.chakra_types';
+    const { rows: chakraRows } = await pool.query(chakraQuery);
+    chakraTypeCache = chakraRows.map(row => row.name);
+    console.log(`✅ Successfully loaded ${chakraTypeCache.length} chakra types.`);
+
+  } catch (err) {
+    console.error('❌ Failed to load game data from database:', err);
+  }
+};
+
+const getCharacters = () => characterCache;
+const getChakraTypes = () => chakraTypeCache;
+
+module.exports = {
+  loadAllGameData,
+  getCharacters,
+  getChakraTypes,
+};
