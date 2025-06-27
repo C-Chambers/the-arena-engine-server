@@ -4,7 +4,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
-const JWT_SECRET = 'your-super-secret-key-that-should-be-in-a-env-file';
+//const JWT_SECRET = 'your-super-secret-key-that-should-be-in-a-env-file';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const DEFAULT_CHARACTERS = ['char_sbt_04', 'char_sbt_01', 'char_sbt_02'];
 
