@@ -79,7 +79,7 @@ function setupWebSockets(server) {
       const token = query.token;
       if (!token) { socket.destroy(); return; }
       const jwt = require('jsonwebtoken');
-      const JWT_SECRET = 'your-super-secret-key-that-should-be-in-a-env-file';
+      const JWT_SECRET = process.env.JWT_SECRET;
       jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) { socket.destroy(); return; }
         gameWss.handleUpgrade(request, socket, head, (ws) => gameWss.emit('connection', ws, request, decoded.user));
