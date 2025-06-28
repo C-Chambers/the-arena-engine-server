@@ -1,9 +1,20 @@
 // src/controllers/adminController.js
 
 const { pool } = require('../config/database');
-const { loadAllGameData } = require('../services/characterService');
+const { loadAllGameData, getCharacters } = require('../services/characterService');
 
 // --- Character Management ---
+
+// NEW: Get all characters for the admin panel
+const getAllCharactersAdmin = (req, res) => {
+    try {
+        const characters = getCharacters(); // Get from cache
+        res.json(characters);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
 
 const createCharacter = async (req, res) => {
   const { character_id, name, max_hp, image_url } = req.body;
@@ -28,7 +39,7 @@ const createCharacter = async (req, res) => {
 };
 
 const updateCharacter = async (req, res) => {
-  const { id } = req.params; // Get character_id from the URL parameter
+  const { id } = req.params;
   const { name, max_hp, image_url } = req.body;
 
   try {
@@ -44,7 +55,7 @@ const updateCharacter = async (req, res) => {
       return res.status(404).json({ msg: 'Character not found.' });
     }
     
-    await loadAllGameData(); // Refresh the cache
+    await loadAllGameData(); 
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err.message);
@@ -55,8 +66,6 @@ const updateCharacter = async (req, res) => {
 const deleteCharacter = async (req, res) => {
   const { id } = req.params;
   try {
-    // Note: Due to foreign key constraints, you must delete associated skills first.
-    // A more robust implementation would handle this in a transaction.
     await pool.query('DELETE FROM arena_engine_schema.skills WHERE character_id = $1', [id]);
     const result = await pool.query('DELETE FROM arena_engine_schema.characters WHERE character_id = $1 RETURNING *;', [id]);
 
@@ -64,7 +73,7 @@ const deleteCharacter = async (req, res) => {
         return res.status(404).json({ msg: 'Character not found.' });
     }
 
-    await loadAllGameData(); // Refresh the cache
+    await loadAllGameData();
     res.json({ msg: 'Character and associated skills deleted successfully.' });
   } catch (err) {
     console.error(err.message);
@@ -72,10 +81,8 @@ const deleteCharacter = async (req, res) => {
   }
 };
 
-
-// We will add functions for Skills and Missions here in the future.
-
 module.exports = {
+  getAllCharactersAdmin,
   createCharacter,
   updateCharacter,
   deleteCharacter,
