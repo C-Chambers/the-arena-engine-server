@@ -10,6 +10,7 @@ const characterRoutes = require('./routes/characters.js');
 const teamRoutes = require('./routes/team.js');
 const missionRoutes = require('./routes/missions.js');
 const adminRoutes = require('./routes/admin.js'); // Import our new admin routes
+const ratingRoutes = require('./routes/ratings.js'); // Import the missing rating routes
 const gameManager = require('./game/manager.js');
 const { loadAllGameData } = require('./services/characterService');
 
