@@ -30,6 +30,7 @@ async function startServer() {
   app.use('/api/team', teamRoutes);
   app.use('/api/missions', missionRoutes);
   app.use('/api/admin', adminRoutes); // Use the admin routes
+  app.use('/api/ratings', ratingRoutes); // Use the rating routes
   app.use('/status', statusRoutes(gameManager));
 
   app.get('/', (req, res) => {
