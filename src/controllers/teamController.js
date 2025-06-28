@@ -45,7 +45,13 @@ const getTeam = async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ msg: 'No team set for this user.' });
         }
-        res.json(result.rows[0]);
+        const teamIds = [result.rows[0].character1_id, result.rows[0].character2_id, result.rows[0].character3_id];
+        const allCharacters = getCharacters(); // Get all character data from cache
+
+        // Find the full character objects that match the saved IDs
+        const userTeam = allCharacters.filter(char => teamIds.includes(char.id));
+
+        res.json(userTeam);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

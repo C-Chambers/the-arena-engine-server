@@ -3,8 +3,11 @@
     "",
     "\\scripts",
     "\\src",
-    "\\src\\middleware"
+    "\\src\\controllers",
+    "\\src\\middleware",
+    "\\src\\routes",
+    "\\src\\services"
   ],
-  "SelectedNode": "\\src\\middleware\\authMiddleware.js",
+  "SelectedNode": "\\src\\controllers\\adminController.js",
   "PreviewInSolutionExplorer": false
 }
