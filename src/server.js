@@ -9,7 +9,7 @@ const statusRoutes = require('./routes/status.js');
 const characterRoutes = require('./routes/characters.js'); 
 const teamRoutes = require('./routes/team.js');
 const missionRoutes = require('./routes/missions.js');
-const ratingRoutes = require('./routes/ratings.js'); // Import our new rating routes
+const adminRoutes = require('./routes/admin.js'); // Import our new admin routes
 const gameManager = require('./game/manager.js');
 const { loadAllGameData } = require('./services/characterService');
 
@@ -28,7 +28,7 @@ async function startServer() {
   app.use('/api/characters', characterRoutes);
   app.use('/api/team', teamRoutes);
   app.use('/api/missions', missionRoutes);
-  app.use('/api/ratings', ratingRoutes); // This line is crucial
+  app.use('/api/admin', adminRoutes); // Use the admin routes
   app.use('/status', statusRoutes(gameManager));
 
   app.get('/', (req, res) => {
@@ -43,7 +43,7 @@ async function startServer() {
 }
 
 function setupWebSockets(server) {
-  // ... WebSocket setup code remains the same ...
+  // ... WebSocket setup code remains the same
   const statusClients = new Set();
   gameManager.setStatusUpdateCallback(() => {
     statusClients.forEach(client => {
