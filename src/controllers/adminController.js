@@ -6,7 +6,8 @@ const { loadAllGameData, getCharacters } = require('../services/characterService
 // --- Character Management ---
 const getAllCharactersAdmin = (req, res) => {
     try {
-        res.json(getCharacters());
+        const characters = getCharacters(); // Get from cacheAdd commentMore actions
+        res.json(characters);
     } catch (err) {
         res.status(500).send('Server Error');
     }

@@ -14,7 +14,7 @@ const router = Router();
 router.use(adminAuthMiddleware);
 
 // --- Character Routes ---
-router.get('/characters', getAllCharactersAdmin);
+router.get('/getCharacters', getAllCharactersAdmin);
 router.post('/characters', createCharacter);
 router.delete('/characters/:id', deleteCharacter);
 
