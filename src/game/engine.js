@@ -26,6 +26,7 @@ class Game {
     const player = this.players[this.activePlayerId];
     const chakraTypes = getChakraTypes(); 
     //Generate our chakra
+    let randomChakra;
     let TempChakra = {};
     for (let i = 0; i < 4; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
@@ -33,7 +34,7 @@ class Game {
     }
 
     //Adds the generated chakra to the player's total'
-    player.chakra = { ...randomChakra, ...player.chakra };
+    player.chakra = { ...TempChakra, ...player.chakra };
   }
 
   useSkill(skill, casterId, targetIds) {
