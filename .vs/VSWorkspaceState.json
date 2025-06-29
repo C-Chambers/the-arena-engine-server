@@ -6,10 +6,11 @@
     "\\src\\app",
     "\\src\\config",
     "\\src\\controllers",
+    "\\src\\game",
     "\\src\\middleware",
     "\\src\\routes",
     "\\src\\services"
   ],
-  "SelectedNode": "\\src\\controllers\\adminController.js",
+  "SelectedNode": "\\src\\game\\engine.js",
   "PreviewInSolutionExplorer": false
 }

@@ -8,7 +8,7 @@ async function grantReward(client, userId, mission) {
   console.log(`Granting reward for mission "${mission.title}" to user ${userId}`);
   
   if (mission.reward_text === 'Unlocks Character: Pink') {
-    const characterIdToUnlock = 'char_sbt_03';
+    const characterIdToUnlock = '3';
     const unlockQuery = `
       INSERT INTO arena_engine_schema.unlocked_characters (user_id, character_id)
       VALUES ($1, $2)

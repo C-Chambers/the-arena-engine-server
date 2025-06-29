@@ -8,12 +8,12 @@ const CHAKRA_TYPES = ['Power', 'Technique', 'Agility', 'Focus']; // Themed chakr
 const characters = [
   // Pai's name on Grid's assassin/debuffer kit
   {
-    id: 'char_sbt_01',
+    id: '1',
     name: 'Pai, the Digital Phantom',
     maxHp: 90, // Lower HP for an assassin
     skills: [
       {
-        id: 'skill_sbt_08',
+        id: '1',
         name: 'Firewall Breach',
         description: 'Deal 30 damage that ignores shields.',
         cost: { Technique: 1, Agility: 1 },
@@ -22,7 +22,7 @@ const characters = [
         ],
       },
       {
-        id: 'skill_sbt_09',
+        id: '2',
         name: 'Data Corruption',
         description: 'Deal 10 damage and apply a "virus" that deals 10 damage per turn for 3 turns.',
         cost: { Technique: 2 },
@@ -35,12 +35,12 @@ const characters = [
   },
   // Lang remains the same
   {
-    id: 'char_sbt_02',
+    id: '2',
     name: 'Lang, the Rocket Ace',
     maxHp: 100, // Standard HP
     skills: [
       {
-        id: 'skill_sbt_04',
+        id: '3',
         name: 'Rocket Shot',
         description: 'Deal 45 damage to a single enemy.',
         cost: { Technique: 2 },
@@ -49,7 +49,7 @@ const characters = [
         ],
       },
       {
-        id: 'skill_sbt_05',
+        id: '4',
         name: 'Boost Dodge',
         description: 'Gain a 50% chance to dodge the next incoming attack.',
         cost: { Agility: 2 },
@@ -61,12 +61,12 @@ const characters = [
   },
   // Pink remains the same
   {
-    id: 'char_sbt_03',
+    id: '3',
     name: 'Pink, the Healing Star',
     maxHp: 110, // Slightly more HP for a support
     skills: [
       {
-        id: 'skill_sbt_06',
+        id: '5',
         name: 'Healing Wave',
         description: 'Heal an ally for 45 HP.',
         cost: { Focus: 2 },
@@ -75,7 +75,7 @@ const characters = [
         ],
       },
       {
-        id: 'skill_sbt_07',
+        id: '6',
         name: 'Dazzling Flash',
         description: 'Apply a "vulnerable" debuff to an enemy, causing them to take 20% more damage for 2 turns.',
         cost: { Focus: 1, Technique: 1 },
@@ -87,12 +87,12 @@ const characters = [
   },
   // Grid's name on Pai's tank/defender kit
   {
-    id: 'char_sbt_04',
+    id: '4',
     name: 'Grid, the Resolute Brawler',
     maxHp: 150, // High HP for a defensive character
     skills: [
       {
-        id: 'skill_sbt_01',
+        id: '7',
         name: 'Iron Wall',
         description: 'Apply a shield to an ally that absorbs 40 damage.',
         cost: { Power: 2 },
@@ -101,7 +101,7 @@ const characters = [
         ],
       },
       {
-        id: 'skill_sbt_02',
+        id: '8',
         name: 'Charging Punch',
         description: 'Deal 25 damage to a single enemy.',
         cost: { Power: 1, Agility: 1 },
@@ -110,7 +110,7 @@ const characters = [
         ],
       },
       {
-        id: 'skill_sbt_03',
+        id: '9',
         name: 'Magnetic Field',
         description: 'Pulls all enemies closer, dealing minor damage.',
         cost: { Technique: 2 },

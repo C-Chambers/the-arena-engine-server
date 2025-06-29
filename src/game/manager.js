@@ -66,6 +66,8 @@ class GameManager {
         console.log(`Matchmaking tick: Processing veteran queue (${this.veteranQueue.length} players).`);
         await this.findAndCreateVeteranMatch();
     }
+
+    this.broadcastQueueStatus();
   }
   
   async findAndCreateVeteranMatch() {
@@ -183,6 +185,19 @@ class GameManager {
         if (player.ws.readyState === player.ws.OPEN) player.ws.send(gameStateMessage);
     });
     this.onStatusUpdate('game-action');
+  }
+
+  broadcastQueueStatus() {
+      const now = Date.now();
+      // For both new and veteran queues
+      [...this.newPlayerQueue, ...this.veteranQueue].forEach(ws => {
+        const timeInQueue = Math.floor((now - ws.timeEnteredQueue) / 1000); // seconds
+        ws.send(JSON.stringify({
+          type: 'QUEUE_STATUS',
+          queue: this.newPlayerQueue.includes(ws) ? 'new' : 'veteran',
+          timeInQueue
+        }));
+      });
   }
 
   handleDisconnect(ws) {
