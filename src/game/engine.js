@@ -98,8 +98,8 @@ class Game {
             if (damageToDeal > 0) {
               target.currentHp -= damageToDeal;
             }
-            this.stats[this.activePlayerId].damageDealt += damageToDeal;
-            this.log.push(`${target.name} took ${damageToDeal} damage.`);
+            this.stats[this.activePlayerId].damageDealt += initialDamage;
+            this.log.push(`${target.name} took ${initialDamage} damage.`);
 
             if (target.currentHp <= 0) {
               target.isAlive = false;
@@ -110,9 +110,7 @@ class Game {
           case 'heal':
             const hpBeforeHeal = target.currentHp;
             target.currentHp += effect.value;
-            if (target.currentHp > target.maxHp) {
-                target.currentHp = target.maxHp;
-        }
+            if (target.currentHp > target.maxHp) target.currentHp = target.maxHp;
             const actualHealAmount = target.currentHp - hpBeforeHeal;
             if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
             this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
@@ -128,7 +126,6 @@ class Game {
         }
       });
     });
-    // It's crucial that using a skill automatically triggers the next turn
     return this.nextTurn();
   }
 
@@ -181,9 +178,11 @@ class Game {
   nextTurn() {
     this.processTurnBasedEffects(this.players[this.activePlayerId]);
     this.turn++;
-    const playerIds = Object.keys(this.players);
+    // --- FIX: Ensure player IDs are treated as numbers during comparison ---
+    const playerIds = Object.keys(this.players).map(id => parseInt(id, 10));
     const currentIndex = playerIds.indexOf(this.activePlayerId);
     this.activePlayerId = playerIds[(currentIndex + 1) % playerIds.length];
+
     this.log.push(`--- Turn ${this.turn}: ${this.players[this.activePlayerId].id}'s turn ---`);
     this.generateChakra();
     this.checkGameOver();

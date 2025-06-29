@@ -147,7 +147,17 @@ class GameManager {
 
   handlePlayerAction(gameId, playerId, action) {
     const game = this.games.get(gameId);
-    if (!game || game.activePlayerId !== playerId || game.isGameOver) return;
+    if (!game) return;
+
+    // --- NEW: Added a detailed debugging log here ---
+    if (game.activePlayerId !== playerId) {
+        console.error(`ACTION REJECTED: Player ${playerId} (type: ${typeof playerId}) tried to act, but it is player ${game.activePlayerId}'s (type: ${typeof game.activePlayerId}) turn.`);
+        return;
+    }
+    if (game.isGameOver) {
+        console.error(`ACTION REJECTED: Player ${playerId} tried to act, but game is over.`);
+        return;
+    }
 
     let newState;
     if (action.type === 'USE_SKILL') {
@@ -155,7 +165,9 @@ class GameManager {
       newState = game.useSkill(skill, casterId, [targetId]); 
     } else if (action.type === 'END_TURN') {
       newState = game.nextTurn();
-    } else { return; }
+    } else {
+      return; 
+    }
     if (!newState) return; 
 
     const gameStateMessage = JSON.stringify({ type: 'GAME_UPDATE', state: newState });
