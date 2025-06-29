@@ -24,10 +24,10 @@ class Game {
 
   generateChakra() {
     const player = this.players[this.activePlayerId];
-    const chakraTypes = getChakraTypes();
-    for (let i = 0; i < 6; i++) {
+    const chakraTypes = getChakraTypes(); 
+    for (let i = 0; i < 4; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
-    player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
+      player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
     }
   }
 
@@ -38,7 +38,7 @@ class Game {
     // --- NEW: Check if the skill is on cooldown ---
     if (casterPlayer.cooldowns[skill.id] > 0) {
         this.log.push(`${skill.name} is on cooldown for ${casterPlayer.cooldowns[skill.id]} more turn(s).`);
-        return; // Do not proceed
+        return; // Return nothing to indicate an invalid action
     }
     
     for (const type in skill.cost) {
@@ -51,19 +51,18 @@ class Game {
     for (const type in skill.cost) {
       casterPlayer.chakra[type] -= skill.cost[type];
     }
-    
+
     // --- NEW: Put the skill on cooldown if it has one ---
     if (skill.cooldown > 0) {
-        casterPlayer.cooldowns[skill.id] = skill.cooldown;
-        this.log.push(`${skill.name} is now on cooldown for ${skill.cooldown} turn(s).`);
+        // We add 1 to the cooldown because it will be decremented at the end of this turn
+        casterPlayer.cooldowns[skill.id] = skill.cooldown + 1; 
     }
-
+    
     const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
     skill.effects.forEach(effect => {
       let targets = [];
-      const targetPlayerId = (effect.target === 'ally' || effect.target === 'self') ? this.activePlayerId : opponentId;
       
       if(effect.target === 'all_enemies') {
         targets = this.players[opponentId].team.filter(c => c.isAlive);
@@ -114,7 +113,7 @@ class Game {
               target.currentHp -= damageToDeal;
               this.log.push(`${target.name} took ${damageToDeal} damage.`);
             }
-            this.stats[this.activePlayerId].damageDealt += damageToDeal;
+            this.stats[this.activePlayerId].damageDealt += initialDamage;
             if (target.currentHp <= 0) {
               target.isAlive = false;
               target.currentHp = 0;
