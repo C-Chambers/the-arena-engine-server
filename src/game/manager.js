@@ -5,7 +5,7 @@ const { pool } = require('../config/database');
 const { getCharacters } = require('../services/characterService');
 const { v4: uuidv4 } = require('uuid');
 
-const MATCHMAKING_TICK_RATE = 5000; // 5 seconds
+const MATCHMAKING_TICK_RATE = 1000; // 5 seconds
 const INITIAL_MMR_RANGE = 100;
 const MMR_RANGE_INCREASE_PER_TICK = 50;
 const NEW_PLAYER_GAME_THRESHOLD = 20; // Players with fewer games are considered "new"
