@@ -6,7 +6,7 @@ const { pool } = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-that-should-be-in-a-env-file';
 
-const DEFAULT_CHARACTERS = ['char_sbt_04', 'char_sbt_01', 'char_sbt_02'];
+const DEFAULT_CHARACTERS = ['1', '2', '3'];
 
 const registerUser = async (req, res) => {
   const { email, password } = req.body;
