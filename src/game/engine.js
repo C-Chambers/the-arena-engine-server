@@ -26,7 +26,7 @@ class Game {
     const player = this.players[this.activePlayerId];
     const chakraTypes = getChakraTypes(); 
     //Generate our chakra
-    TempChakra = {};
+    let TempChakra = {};
     for (let i = 0; i < 4; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
       TempChakra[randomChakra] = (TempChakra[randomChakra] || 0) + 1;

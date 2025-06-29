@@ -46,8 +46,6 @@ class GameManager {
     } catch (err) {
       console.error(`Error fetching team for player ${playerId}:`, err);
     }
-    
-    return Game.createRandomTeam();
   }
 
   // --- matchmakingTick now processes both queues ---
