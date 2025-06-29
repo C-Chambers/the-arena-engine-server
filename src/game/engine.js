@@ -11,12 +11,11 @@ class Game {
       [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {} },
       [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {} },
     };
-    // --- NEW: Add a stats object to track game metrics ---
     this.stats = {
       [player1Info.id]: { damageDealt: 0, healingDone: 0 },
       [player2Info.id]: { damageDealt: 0, healingDone: 0 },
     };
-    this.turn = 1;
+    this.turn = 0;
     this.activePlayerId = player1Info.id;
     this.isGameOver = false;
     this.log = [];
@@ -25,16 +24,11 @@ class Game {
   generateChakra() {
     const player = this.players[this.activePlayerId];
     const chakraTypes = getChakraTypes(); 
-    //Generate our chakra
-    let randomChakra;
-    let TempChakra = {};
-    for (let i = 0; i < 4; i++) {
+    player.chakra = {};
+    for (let i = 0; i < 6; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
-      TempChakra[randomChakra] = (TempChakra[randomChakra] || 0) + 1;
+      player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
     }
-
-    //Adds the generated chakra to the player's total'
-    player.chakra = { ...TempChakra, ...player.chakra };
   }
 
   useSkill(skill, casterId, targetIds) {
@@ -86,8 +80,7 @@ class Game {
             if(vulnerableStatus) {
                 damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
             }
-
-            // --- Track total damage before shield reduction ---
+            
             const initialDamage = damageToDeal; 
             
             if (!effect.ignores_shield) {
@@ -105,8 +98,6 @@ class Game {
             if (damageToDeal > 0) {
               target.currentHp -= damageToDeal;
             }
-
-            // --- NEW: Update damageDealt stat with the initial damage value ---
             this.stats[this.activePlayerId].damageDealt += damageToDeal;
             this.log.push(`${target.name} took ${damageToDeal} damage.`);
 
@@ -120,14 +111,10 @@ class Game {
             const hpBeforeHeal = target.currentHp;
             target.currentHp += effect.value;
             if (target.currentHp > target.maxHp) {
-              target.currentHp = target.maxHp;
-            }
+                target.currentHp = target.maxHp;
+        }
             const actualHealAmount = target.currentHp - hpBeforeHeal;
-
-            // --- NEW: Update healingDone stat ---
-            if (actualHealAmount > 0) {
-              this.stats[this.activePlayerId].healingDone += actualHealAmount;
-            }
+            if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
             this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
             break;
           case 'add_shield':
@@ -141,6 +128,7 @@ class Game {
         }
       });
     });
+    // It's crucial that using a skill automatically triggers the next turn
     return this.nextTurn();
   }
 
@@ -159,7 +147,6 @@ class Game {
                 const poisonDamage = status.damage;
                 char.currentHp -= poisonDamage;
                 this.log.push(`${char.name} took ${poisonDamage} damage from poison.`);
-                // Note: We don't track poison damage for mission stats right now, but could add it here.
                 if (char.currentHp <= 0) {
                     char.isAlive = false;
                     char.currentHp = 0;
@@ -203,7 +190,6 @@ class Game {
     return this.getGameState();
   }
 
-  // --- NEW: Update getGameState to include stats ---
   getGameState() {
     return {
       gameId: this.gameId,
@@ -212,7 +198,7 @@ class Game {
       players: this.players,
       isGameOver: this.isGameOver,
       log: this.log,
-      stats: this.stats, // Include the game stats
+      stats: this.stats,
     };
   }
 }

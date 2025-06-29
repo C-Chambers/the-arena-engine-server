@@ -29,18 +29,15 @@ class GameManager {
     const allCharacters = getCharacters();
     try {
       const res = await pool.query('SELECT character1_id, character2_id, character3_id FROM arena_engine_schema.user_teams WHERE user_id = $1', [playerId]);
-
       if (res.rows.length > 0) {
         const savedTeamIds = res.rows[0];
         const teamCharacterIds = [savedTeamIds.character1_id, savedTeamIds.character2_id, savedTeamIds.character3_id];
-        
         const team = teamCharacterIds.map(id => {
             const charData = allCharacters.find(c => c.id === id);
             if (!charData) return null;
             const instanceId = `${charData.id}_${uuidv4()}`;
             return { ...JSON.parse(JSON.stringify(charData)), instanceId, currentHp: charData.maxHp, statuses: [], isAlive: true };
         }).filter(Boolean); 
-
         if (team.length === 3) return team;
       }
     } catch (err) {
@@ -48,7 +45,6 @@ class GameManager {
     }
   }
 
-  // --- matchmakingTick now processes both queues ---
   async matchmakingTick() {
     // Process the new player queue first
     if (this.newPlayerQueue.length >= 2) {
@@ -81,22 +77,17 @@ class GameManager {
         return { ...player, rating: ratingInfo ? ratingInfo.rating : 1500, searchRange };
       })
       .sort((a, b) => a.rating - b.rating);
-
+      
     const matchedPlayerIds = new Set();
-    // Create a copy to iterate over while modifying the original `ratedQueue`
     const queueToCheck = [...ratedQueue];
 
     for (const player1 of queueToCheck) {
       if (matchedPlayerIds.has(player1.id)) continue;
-
       let bestMatch = null;
       let smallestDiff = Infinity;
-
       for (const player2 of queueToCheck) {
         if (player1.id === player2.id || matchedPlayerIds.has(player2.id)) continue;
-        
         const ratingDifference = Math.abs(player1.rating - player2.rating);
-
         if (ratingDifference < smallestDiff && ratingDifference <= player1.searchRange && ratingDifference <= player2.searchRange) {
           smallestDiff = ratingDifference;
           bestMatch = player2;
@@ -113,41 +104,30 @@ class GameManager {
   }
 
   async createGame(player1_ws, player2_ws) {
-    console.log(`Match found between ${player1_ws.id} and ${player2_ws.id}!`);
-
     const [player1Team, player2Team] = await Promise.all([
       this.getTeamForPlayer(player1_ws.id),
       this.getTeamForPlayer(player2_ws.id)
     ]);
-
     const player1 = { id: player1_ws.id, email: player1_ws.email, ws: player1_ws, team: player1Team };
     const player2 = { id: player2_ws.id, email: player2_ws.email, ws: player2_ws, team: player2Team };
-
     const newGame = new Game(player1, player2);
     this.games.set(newGame.gameId, newGame);
-    
     player1.ws.gameId = newGame.gameId;
     player2.ws.gameId = newGame.gameId;
-    
     const initialState = newGame.startGame();
-    
     player1.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player1.id, state: initialState }));
     player2.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player2.id, state: initialState }));
-
     this.onStatusUpdate('game-started');
   }
 
-  // --- Updated handleNewPlayer to route to the correct queue ---
   async handleNewPlayer(ws, user) {
     if (this.newPlayerQueue.some(p => p.id === user.id) || this.veteranQueue.some(p => p.id === user.id) || Array.from(this.games.values()).some(g => g.players[user.id])) {
       console.log(`Player ${user.id} is already in queue or in a game.`);
       return;
     }
-
     const ratingsQuery = `SELECT games_played FROM arena_engine_schema.player_ratings WHERE user_id = $1`;
     const { rows } = await pool.query(ratingsQuery, [user.id]);
     const gamesPlayed = rows.length > 0 ? rows[0].games_played : 0;
-
     ws.id = user.id;
     ws.email = user.email;
     ws.timeEnteredQueue = Date.now();
@@ -204,24 +184,23 @@ class GameManager {
         this.newPlayerQueue.splice(queueIndex, 1);
     } else {
         queueIndex = this.veteranQueue.findIndex(p => p.id === ws.id);
-        if (queueIndex > -1) {
+    if (queueIndex > -1) {
             this.veteranQueue.splice(queueIndex, 1);
         }
     }
-
     if (ws.gameId) {
-        const game = this.games.get(ws.gameId);
-        if (game) {
-            const remainingPlayerId = Object.keys(game.players).find(id => id !== ws.id);
-            if (remainingPlayerId) {
-                const remainingPlayer = game.players[remainingPlayerId];
-                if (remainingPlayer.ws.readyState === remainingPlayer.ws.OPEN) {
-                    remainingPlayer.ws.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED' }));
-                }
-            }
-            this.games.delete(ws.gameId);
-            this.onStatusUpdate('game-ended');
+      const game = this.games.get(ws.gameId);
+      if (game) {
+        const remainingPlayerId = Object.keys(game.players).find(id => id !== ws.id);
+        if (remainingPlayerId) {
+          const remainingPlayer = game.players[remainingPlayerId];
+          if (remainingPlayer.ws.readyState === remainingPlayer.ws.OPEN) {
+            remainingPlayer.ws.send(JSON.stringify({ type: 'OPPONENT_DISCONNECTED' }));
+          }
         }
+        this.games.delete(ws.gameId);
+        this.onStatusUpdate('game-ended');
+      }
     }
   }
 }
