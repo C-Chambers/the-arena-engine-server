@@ -25,11 +25,13 @@ class Game {
   generateChakra() {
     const player = this.players[this.activePlayerId];
     const chakraTypes = getChakraTypes(); 
-    player.chakra = {};
-    for (let i = 0; i < 6; i++) {
+    TempChakra = {};
+    for (let i = 0; i < 4; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
-      player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
+      TempChakra[randomChakra] = (TempChakra[randomChakra] || 0) + 1;
     }
+
+    player.chakra = { ...randomChakra, ...player.chakra };
   }
 
   useSkill(skill, casterId, targetIds) {

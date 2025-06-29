@@ -1,9 +1,9 @@
 // scripts/seed.js
 // This script will populate our database with initial character, skill, and mission data.
 
-const { pool } = require('../src/config/database');
+const { Pool } = require('pg');
 const { characters } = require('../src/game/data');
-
+let pool;
 // Our chakra types, now defined here for seeding
 const CHAKRA_TYPES = ['Power', 'Technique', 'Agility', 'Focus'];
 
@@ -33,6 +33,12 @@ const missionsToSeed = [
 ];
 
 async function seedDatabase() {
+  pool = new Pool({
+    connectionString: "postgresql://arena_user:ft3Cok3PJs5GldOetWle5x7CoBl3mHeL@dpg-d1fh7sgdl3ps73ci33lg-a.ohio-postgres.render.com/arena_engine_db",
+    ssl: {
+            rejectUnauthorized: false // Required for Render connections
+         }
+   });
   const client = await pool.connect();
   try {
     console.log('Starting database seeding process...');
@@ -50,15 +56,15 @@ async function seedDatabase() {
 
     // --- Seed Characters and Skills ---
     for (const character of characters) {
-      const charInsertQuery = 'INSERT INTO arena_engine_schema.characters(character_id, name, max_hp) VALUES($1, $2, $3)';
-      await client.query(charInsertQuery, [character.id, character.name, character.maxHp]);
+      let i = 1;
+      const charInsertQuery = 'INSERT INTO arena_engine_schema.characters(name, max_hp) VALUES($1, $2)';
+      await client.query(charInsertQuery, [character.name, character.maxHp]);
       console.log(`Inserted character: ${character.name}`);
 
       for (const skill of character.skills) {
-        const skillInsertQuery = 'INSERT INTO arena_engine_schema.skills(skill_id, character_id, name, description, cost, effects) VALUES($1, $2, $3, $4, $5, $6)';
+        const skillInsertQuery = 'INSERT INTO arena_engine_schema.skills(character_id, name, description, cost, effects) VALUES($1, $2, $3, $4, $5)';
         await client.query(skillInsertQuery, [
-          skill.id,
-          character.id,
+          i,
           skill.name,
           skill.description,
           JSON.stringify(skill.cost),
@@ -66,6 +72,7 @@ async function seedDatabase() {
         ]);
         console.log(`  - Inserted skill: ${skill.name}`);
       }
+      i++;
     }
     
     // --- NEW: Seed Missions ---

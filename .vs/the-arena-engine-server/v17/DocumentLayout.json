@@ -3,28 +3,44 @@
   "WorkspaceRootPath": "G:\\The Arena Game\\the-arena-engine-server\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\scripts\\seed.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:scripts\\seed.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\adminController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\adminController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\admin.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\admin.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\authController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\services\\missionService.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\services\\missionService.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\server.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\server.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\teamController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\ratingController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\ratingController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\game\\manager.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\game\\manager.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\server.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\server.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\services\\missionService.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\services\\missionService.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\ratings.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\ratings.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\admin.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\admin.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\teamController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\characterController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -35,20 +51,8 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\characters.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\ratings.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\ratings.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\status.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\routes\\status.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\ratingController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\ratingController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\controllers\\authController.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\missions.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -86,102 +90,89 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "teamController.js",
-              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js",
-              "RelativeDocumentMoniker": "src\\controllers\\teamController.js",
-              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js",
-              "RelativeToolTip": "src\\controllers\\teamController.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAvAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "seed.js",
+              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\scripts\\seed.js",
+              "RelativeDocumentMoniker": "scripts\\seed.js",
+              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\scripts\\seed.js",
+              "RelativeToolTip": "scripts\\seed.js",
+              "ViewState": "AgIAAC0AAAAAAAAAAAAAAEoAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T03:37:57.381Z",
+              "WhenOpened": "2025-06-28T18:20:12.619Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "missionService.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\services\\missionService.js",
               "RelativeDocumentMoniker": "src\\services\\missionService.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\services\\missionService.js",
               "RelativeToolTip": "src\\services\\missionService.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAZAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T03:37:51.765Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "manager.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\game\\manager.js",
               "RelativeDocumentMoniker": "src\\game\\manager.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\game\\manager.js",
               "RelativeToolTip": "src\\game\\manager.js",
-              "ViewState": "AgIAABMAAAAAAAAAAAAAACQAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAIIAAAAAAAAAAAAowJMAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T03:37:48.01Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 4,
               "Title": "ratingController.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\ratingController.js",
               "RelativeDocumentMoniker": "src\\controllers\\ratingController.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\ratingController.js",
               "RelativeToolTip": "src\\controllers\\ratingController.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAdAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAoAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T03:29:38.285Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "missions.js",
-              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\missions.js",
-              "RelativeDocumentMoniker": "src\\routes\\missions.js",
-              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\missions.js",
-              "RelativeToolTip": "src\\routes\\missions.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T02:06:03.486Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 7,
               "Title": "ratings.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\ratings.js",
               "RelativeDocumentMoniker": "src\\routes\\ratings.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\ratings.js",
               "RelativeToolTip": "src\\routes\\ratings.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T02:05:08.036Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "adminController.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\adminController.js",
               "RelativeDocumentMoniker": "src\\controllers\\adminController.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\adminController.js",
               "RelativeToolTip": "src\\controllers\\adminController.js",
-              "ViewState": "AgIAACwAAAAAAAAAAAAwwD4AAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T01:31:38.277Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 8,
               "Title": "admin.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\admin.js",
               "RelativeDocumentMoniker": "src\\routes\\admin.js",
@@ -189,12 +180,11 @@
               "RelativeToolTip": "src\\routes\\admin.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T01:31:30.687Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T01:31:30.687Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "adminAuthMiddleware.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\middleware\\adminAuthMiddleware.js",
               "RelativeDocumentMoniker": "src\\middleware\\adminAuthMiddleware.js",
@@ -202,12 +192,11 @@
               "RelativeToolTip": "src\\middleware\\adminAuthMiddleware.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T01:31:03.302Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T01:31:03.302Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "auth.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\auth.js",
               "RelativeDocumentMoniker": "src\\routes\\auth.js",
@@ -215,12 +204,11 @@
               "RelativeToolTip": "src\\routes\\auth.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T00:57:55.833Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T00:57:55.833Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 10,
               "Title": "characterController.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\characterController.js",
               "RelativeDocumentMoniker": "src\\controllers\\characterController.js",
@@ -228,25 +216,61 @@
               "RelativeToolTip": "src\\controllers\\characterController.js",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAAAgAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T00:34:28.034Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T00:34:28.034Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "server.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\server.js",
               "RelativeDocumentMoniker": "src\\server.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\server.js",
               "RelativeToolTip": "src\\server.js",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAAABoAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAACEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-27T23:28:27.536Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 2,
+              "Title": "authController.js",
+              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js",
+              "RelativeDocumentMoniker": "src\\controllers\\authController.js",
+              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js",
+              "RelativeToolTip": "src\\controllers\\authController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-06-27T23:11:31.527Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "missions.js",
+              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\missions.js",
+              "RelativeDocumentMoniker": "src\\routes\\missions.js",
+              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\missions.js",
+              "RelativeToolTip": "src\\routes\\missions.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-06-28T02:06:03.486Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "teamController.js",
+              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js",
+              "RelativeDocumentMoniker": "src\\controllers\\teamController.js",
+              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\teamController.js",
+              "RelativeToolTip": "src\\controllers\\teamController.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-06-28T03:37:57.381Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "characters.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\characters.js",
               "RelativeDocumentMoniker": "src\\routes\\characters.js",
@@ -254,12 +278,11 @@
               "RelativeToolTip": "src\\routes\\characters.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-27T23:27:30.412Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-27T23:27:30.412Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "status.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\routes\\status.js",
               "RelativeDocumentMoniker": "src\\routes\\status.js",
@@ -267,12 +290,11 @@
               "RelativeToolTip": "src\\routes\\status.js",
               "ViewState": "AgIAAC0AAAAAAAAAAAAAADUAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-27T23:24:06.551Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-27T23:24:06.551Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": ".gitignore",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\.gitignore",
               "RelativeDocumentMoniker": ".gitignore",
@@ -280,25 +302,11 @@
               "RelativeToolTip": ".gitignore",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-06-28T01:37:58.353Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T01:37:58.353Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "authController.js",
-              "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js",
-              "RelativeDocumentMoniker": "src\\controllers\\authController.js",
-              "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\controllers\\authController.js",
-              "RelativeToolTip": "src\\controllers\\authController.js",
-              "ViewState": "AgIAAE4AAAAAAAAAAAAAAF4AAAAWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-27T23:11:31.527Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "characterService.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\services\\characterService.js",
               "RelativeDocumentMoniker": "src\\services\\characterService.js",
@@ -306,12 +314,11 @@
               "RelativeToolTip": "src\\services\\characterService.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T00:34:49.433Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T00:34:49.433Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "authMiddleware.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\middleware\\authMiddleware.js",
               "RelativeDocumentMoniker": "src\\middleware\\authMiddleware.js",
@@ -319,12 +326,11 @@
               "RelativeToolTip": "src\\middleware\\authMiddleware.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-27T23:17:20.289Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-27T23:17:20.289Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "ProjectSettings.json",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\.vs\\ProjectSettings.json",
               "RelativeDocumentMoniker": ".vs\\ProjectSettings.json",
@@ -333,10 +339,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2025-06-27T23:11:43.395Z"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             }
           ]
         }

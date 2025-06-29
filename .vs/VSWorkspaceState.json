@@ -3,6 +3,8 @@
     "",
     "\\scripts",
     "\\src",
+    "\\src\\app",
+    "\\src\\config",
     "\\src\\controllers",
     "\\src\\middleware",
     "\\src\\routes",
