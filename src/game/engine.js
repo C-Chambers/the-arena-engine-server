@@ -32,7 +32,15 @@ class Game {
 
   useSkill(skill, casterId, targetIds) {
     const casterPlayer = this.players[this.activePlayerId];
+    const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
     
+    // --- NEW: Stun Check ---
+    // Check if the casting character is stunned at the beginning of the action.
+    if (casterChar.statuses.some(s => s.type === 'stun')) {
+        this.log.push(`${casterChar.name} is stunned and cannot act!`);
+        return; // Immediately end the turn
+    }
+
     if (casterPlayer.cooldowns[skill.id] > 0) {
         this.log.push(`${skill.name} is on cooldown for ${casterPlayer.cooldowns[skill.id]} more turn(s).`);
         return; 
@@ -53,7 +61,6 @@ class Game {
         casterPlayer.cooldowns[skill.id] = skill.cooldown + 1; 
     }
     
-    const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
     skill.effects.forEach(effect => {
@@ -76,6 +83,12 @@ class Game {
         targets.forEach(target => {
           if (!target.isAlive) return;
   
+          // --- NEW: Invulnerability Check ---
+          if (target.statuses.some(s => s.type === 'invulnerability')) {
+              this.log.push(`${target.name} is invulnerable. The attack had no effect!`);
+              return; // Skip all effects on this target
+          }
+
           const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
           if (dodgeStatus && effect.type === 'damage' && Math.random() < dodgeStatus.chance) {
             this.log.push(`${target.name} dodged the attack!`);
@@ -105,6 +118,7 @@ class Game {
               this.log.push(`${target.name} took ${damageToDeal} damage.`);
             }
               this.stats[this.activePlayerId].damageDealt += initialDamage;
+              this.log.push(`${target.name} took ${initialDamage} damage.`);
               if (target.currentHp <= 0) {
                 target.isAlive = false;
                 target.currentHp = 0;
@@ -181,14 +195,13 @@ class Game {
     const endingTurnPlayer = this.players[this.activePlayerId];
     this.processTurnBasedEffects(endingTurnPlayer);
 
-    // --- FIX: Use an immutable pattern to update cooldowns ---
     const newCooldowns = {};
     for (const skillId in endingTurnPlayer.cooldowns) {
-        if (endingTurnPlayer.cooldowns[skillId] > 1) { // Check for > 1 because we will decrement
+        if (endingTurnPlayer.cooldowns[skillId] > 1) {
             newCooldowns[skillId] = endingTurnPlayer.cooldowns[skillId] - 1;
         }
     }
-    endingTurnPlayer.cooldowns = newCooldowns; // Assign the new object
+    endingTurnPlayer.cooldowns = newCooldowns;
 
     this.turn++;
     const playerIds = Object.keys(this.players).map(id => parseInt(id, 10));
