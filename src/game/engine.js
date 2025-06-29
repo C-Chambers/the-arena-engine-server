@@ -57,7 +57,6 @@ class Game {
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
     skill.effects.forEach(effect => {
-        // ... (effect logic remains the same)
         let targets = [];
         const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
         const targetPlayerId = (effect.target === 'ally' || effect.target === 'self') ? this.activePlayerId : opponentId;
@@ -83,7 +82,6 @@ class Game {
             return;
           }
   
-          // ... (switch case for effects remains the same)
           switch(effect.type) {
             case 'damage':
               let damageToDeal = effect.value;
@@ -115,8 +113,7 @@ class Game {
               break;
             case 'heal':
               const hpBeforeHeal = target.currentHp;
-              target.currentHp += effect.value;
-              if (target.currentHp > target.maxHp) target.currentHp = target.maxHp;
+              target.currentHp = Math.min(target.maxHp, target.currentHp + effect.value);
               const actualHealAmount = target.currentHp - hpBeforeHeal;
               if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
               this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
@@ -147,13 +144,12 @@ class Game {
         const newStatuses = [];
         char.statuses.forEach(status => {
             if (status.type === 'poison') {
-                const poisonDamage = status.damage;
-                char.currentHp -= poisonDamage;
-                this.log.push(`${char.name} took ${poisonDamage} damage from poison.`);
+                char.currentHp -= status.damage;
+                this.log.push(`${target.name} took ${status.damage} damage from poison.`);
                 if (char.currentHp <= 0) {
                     char.isAlive = false;
                     char.currentHp = 0;
-                    this.log.push(`${char.name} succumbed to poison!`);
+                    this.log.push(`${target.name} succumbed to poison!`);
                 }
             }
             if (status.duration > 1) {
@@ -185,11 +181,14 @@ class Game {
     const endingTurnPlayer = this.players[this.activePlayerId];
     this.processTurnBasedEffects(endingTurnPlayer);
 
+    // --- FIX: Use an immutable pattern to update cooldowns ---
+    const newCooldowns = {};
     for (const skillId in endingTurnPlayer.cooldowns) {
-        if (endingTurnPlayer.cooldowns[skillId] > 0) {
-            endingTurnPlayer.cooldowns[skillId]--;
+        if (endingTurnPlayer.cooldowns[skillId] > 1) { // Check for > 1 because we will decrement
+            newCooldowns[skillId] = endingTurnPlayer.cooldowns[skillId] - 1;
         }
     }
+    endingTurnPlayer.cooldowns = newCooldowns; // Assign the new object
 
     this.turn++;
     const playerIds = Object.keys(this.players).map(id => parseInt(id, 10));
