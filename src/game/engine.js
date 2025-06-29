@@ -8,7 +8,6 @@ class Game {
   constructor(player1Info, player2Info) {
     this.gameId = uuidv4();
     this.players = {
-      // --- NEW: Add a cooldowns object for each player ---
       [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {}, cooldowns: {} },
       [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {}, cooldowns: {} },
     };
@@ -33,12 +32,10 @@ class Game {
 
   useSkill(skill, casterId, targetIds) {
     const casterPlayer = this.players[this.activePlayerId];
-    const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
     
-    // --- NEW: Check if the skill is on cooldown ---
     if (casterPlayer.cooldowns[skill.id] > 0) {
         this.log.push(`${skill.name} is on cooldown for ${casterPlayer.cooldowns[skill.id]} more turn(s).`);
-        return; // Return nothing to indicate an invalid action
+        return; 
     }
     
     for (const type in skill.cost) {
@@ -52,9 +49,7 @@ class Game {
       casterPlayer.chakra[type] -= skill.cost[type];
     }
 
-    // --- NEW: Put the skill on cooldown if it has one ---
     if (skill.cooldown > 0) {
-        // We add 1 to the cooldown because it will be decremented at the end of this turn
         casterPlayer.cooldowns[skill.id] = skill.cooldown + 1; 
     }
     
@@ -62,83 +57,81 @@ class Game {
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
     skill.effects.forEach(effect => {
-      let targets = [];
-      
-      if(effect.target === 'all_enemies') {
-        targets = this.players[opponentId].team.filter(c => c.isAlive);
-      } else {
-        targetIds.forEach(targetId => {
-            const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
-            if(playerToTarget) {
-                const target = playerToTarget.team.find(c => c.instanceId === targetId);
-                if (target) targets.push(target);
-            }
-        });
-      }
-
-      targets.forEach(target => {
-        if (!target.isAlive) return;
-
-        const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
-        if (dodgeStatus && effect.type === 'damage') {
-          if (Math.random() < dodgeStatus.chance) {
+        // ... (effect logic remains the same)
+        let targets = [];
+        const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+        const targetPlayerId = (effect.target === 'ally' || effect.target === 'self') ? this.activePlayerId : opponentId;
+        
+        if(effect.target === 'all_enemies') {
+          targets = this.players[opponentId].team.filter(c => c.isAlive);
+        } else {
+          targetIds.forEach(targetId => {
+              const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
+              if(playerToTarget) {
+                  const target = playerToTarget.team.find(c => c.instanceId === targetId);
+                  if (target) targets.push(target);
+              }
+          });
+        }
+  
+        targets.forEach(target => {
+          if (!target.isAlive) return;
+  
+          const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
+          if (dodgeStatus && effect.type === 'damage' && Math.random() < dodgeStatus.chance) {
             this.log.push(`${target.name} dodged the attack!`);
             return;
           }
-        }
-
-        switch(effect.type) {
-          case 'damage':
-            let damageToDeal = effect.value;
-            const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
-            if(vulnerableStatus) {
-                damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
-            }
-            const initialDamage = damageToDeal; 
-            if (!effect.ignores_shield) {
-                const shield = target.statuses.find(s => s.type === 'shield');
-                if(shield) {
-                    if(shield.value >= damageToDeal) {
-                        shield.value -= damageToDeal;
-                        this.log.push(`${target.name}'s shield absorbed ${damageToDeal} damage.`);
-                        damageToDeal = 0;
-                    } else {
-                        damageToDeal -= shield.value;
-                        this.log.push(`${target.name}'s shield broke after absorbing ${shield.value} damage.`);
-                        target.statuses = target.statuses.filter(s => s.type !== 'shield');
-                    }
-                }
-            }
+  
+          // ... (switch case for effects remains the same)
+          switch(effect.type) {
+            case 'damage':
+              let damageToDeal = effect.value;
+              const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
+              if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
+              const initialDamage = damageToDeal; 
+              if (!effect.ignores_shield) {
+                  const shield = target.statuses.find(s => s.type === 'shield');
+                  if(shield) {
+                      if(shield.value >= damageToDeal) {
+                          shield.value -= damageToDeal;
+                          damageToDeal = 0;
+                      } else {
+                          damageToDeal -= shield.value;
+                          target.statuses = target.statuses.filter(s => s.type !== 'shield');
+                      }
+                  }
+              }
             if (damageToDeal > 0) {
               target.currentHp -= damageToDeal;
               this.log.push(`${target.name} took ${damageToDeal} damage.`);
             }
-            this.stats[this.activePlayerId].damageDealt += initialDamage;
-            if (target.currentHp <= 0) {
-              target.isAlive = false;
-              target.currentHp = 0;
-              this.log.push(`${target.name} has been defeated!`);
-            }
-            break;
-          case 'heal':
-            const hpBeforeHeal = target.currentHp;
-            target.currentHp += effect.value;
-            if (target.currentHp > target.maxHp) target.currentHp = target.maxHp;
-            const actualHealAmount = target.currentHp - hpBeforeHeal;
-            if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
-            this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
-            break;
-          case 'add_shield':
-            target.statuses.push({ type: 'shield', value: effect.value });
-            this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
-            break;
-          case 'apply_status':
-            target.statuses.push({ type: effect.status, ...effect });
-            this.log.push(`${target.name} is now affected by ${effect.status}.`);
-            break;
-        }
+              this.stats[this.activePlayerId].damageDealt += initialDamage;
+              if (target.currentHp <= 0) {
+                target.isAlive = false;
+                target.currentHp = 0;
+                this.log.push(`${target.name} has been defeated!`);
+              }
+              break;
+            case 'heal':
+              const hpBeforeHeal = target.currentHp;
+              target.currentHp += effect.value;
+              if (target.currentHp > target.maxHp) target.currentHp = target.maxHp;
+              const actualHealAmount = target.currentHp - hpBeforeHeal;
+              if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
+              this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
+              break;
+            case 'add_shield':
+              target.statuses.push({ type: 'shield', value: effect.value });
+              this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
+              break;
+            case 'apply_status':
+              target.statuses.push({ type: effect.status, ...effect });
+              this.log.push(`${target.name} is now affected by ${effect.status}.`);
+              break;
+          }
+        });
       });
-    });
     return this.nextTurn();
   }
 
@@ -192,7 +185,6 @@ class Game {
     const endingTurnPlayer = this.players[this.activePlayerId];
     this.processTurnBasedEffects(endingTurnPlayer);
 
-    // --- NEW: Decrement skill cooldowns for the player whose turn is ending ---
     for (const skillId in endingTurnPlayer.cooldowns) {
         if (endingTurnPlayer.cooldowns[skillId] > 0) {
             endingTurnPlayer.cooldowns[skillId]--;

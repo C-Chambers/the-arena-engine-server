@@ -9,18 +9,18 @@ const loadAllGameData = async () => {
   try {
     console.log('Loading all character, skill, and chakra data from database...');
     
-    // --- Load Characters and Skills ---
-    // Corrected the SQL query to include all selected columns in the GROUP BY clause.
+    // --- UPDATED: The SQL query now selects the `cooldown` from the skills table ---
     const charactersQuery = `
       SELECT
-        c.character_id,
-        c.name,
-        c.max_hp,
-        c.image_url,
+        c.character_id, c.name, c.max_hp, c.image_url,
         json_agg(
           json_build_object(
-            'id', s.skill_id, 'name', s.name, 'description', s.description,
-            'cost', s.cost, 'effects', s.effects
+            'id', s.skill_id, 
+            'name', s.name, 
+            'description', s.description,
+            'cost', s.cost, 
+            'effects', s.effects,
+            'cooldown', s.cooldown -- Include the cooldown value
           )
         ) FILTER (WHERE s.skill_id IS NOT NULL) AS skills
       FROM arena_engine_schema.characters AS c
@@ -33,12 +33,11 @@ const loadAllGameData = async () => {
         id: row.character_id,
         name: row.name,
         maxHp: row.max_hp,
-        imageUrl: row.image_url, // This should now have the correct data
+        imageUrl: row.image_url,
         skills: row.skills || [],
     }));
     console.log(`✅ Successfully loaded ${characterCache.length} characters.`);
 
-    // --- Load Chakra Types ---
     const chakraQuery = 'SELECT name FROM arena_engine_schema.chakra_types';
     const { rows: chakraRows } = await pool.query(chakraQuery);
     chakraTypeCache = chakraRows.map(row => row.name);
