@@ -7,9 +7,9 @@ let chakraTypeCache = [];
 
 const loadAllGameData = async () => {
   try {
-    console.log('Loading all character, skill, and chakra data from database...');
+    console.log('Loading all game data from database...');
     
-    // --- UPDATED: The SQL query now selects the `cooldown` from the skills table ---
+    // --- UPDATED: Query now includes the new skill classification columns ---
     const charactersQuery = `
       SELECT
         c.character_id, c.name, c.max_hp, c.image_url,
@@ -20,7 +20,10 @@ const loadAllGameData = async () => {
             'description', s.description,
             'cost', s.cost, 
             'effects', s.effects,
-            'cooldown', s.cooldown -- Include the cooldown value
+            'cooldown', s.cooldown,
+            'skill_class', s.skill_class,
+            'skill_range', s.skill_range,
+            'skill_persistence', s.skill_persistence
           )
         ) FILTER (WHERE s.skill_id IS NOT NULL) AS skills
       FROM arena_engine_schema.characters AS c
