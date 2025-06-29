@@ -8,14 +8,14 @@ class Game {
   constructor(player1Info, player2Info) {
     this.gameId = uuidv4();
     this.players = {
-      [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {}, cooldowns: {} },
-      [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {}, cooldowns: {} },
+      [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {}, cooldowns: {}, actionQueue: [] },
+      [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {}, cooldowns: {}, actionQueue: [] },
     };
     this.stats = {
       [player1Info.id]: { damageDealt: 0, healingDone: 0 },
       [player2Info.id]: { damageDealt: 0, healingDone: 0 },
     };
-    this.turn = 1;
+    this.turn = 0;
     this.activePlayerId = player1Info.id;
     this.isGameOver = false;
     this.log = [];
@@ -24,132 +24,180 @@ class Game {
   generateChakra() {
     const player = this.players[this.activePlayerId];
     const chakraTypes = getChakraTypes(); 
-    for (let i = 0; i < 4; i++) {
+    this.log.push(`${player.email} gains 3 new chakra.`);
+    for (let i = 0; i < 3; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
       player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
     }
   }
 
-  useSkill(skill, casterId, targetIds) {
+  // --- NEW: Skill Stack Logic ---
+
+  queueSkill(action) {
+    const player = this.players[this.activePlayerId];
+    const { skill } = action;
+
+    const caster = player.team.find(c => c.instanceId === action.casterId);
+    if (!caster || !caster.isAlive) {
+      return { success: false, message: "Invalid caster." };
+    }
+    
+    if (player.actionQueue.some(a => a.casterId === action.casterId)) {
+        return { success: false, message: `${caster.name} has already queued a skill this turn.` };
+    }
+    
+    const currentCost = this.calculateQueueCost(player.actionQueue);
+    const newTotalCost = { ...currentCost };
+    for (const type in skill.cost) {
+        newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
+    }
+    for (const type in newTotalCost) {
+        if (!player.chakra[type] || player.chakra[type] < newTotalCost[type]) {
+            return { success: false, message: `Not enough ${type} chakra.`};
+        }
+    }
+
+    player.actionQueue.push(action);
+    return { success: true };
+  }
+
+  dequeueSkill(queueIndex) {
+      const player = this.players[this.activePlayerId];
+      if(player.actionQueue[queueIndex]) {
+          player.actionQueue.splice(queueIndex, 1);
+          return { success: true };
+      }
+      return { success: false, message: "Invalid queue index." };
+  }
+  
+  reorderQueue(oldIndex, newIndex) {
+      const player = this.players[this.activePlayerId];
+      const [movedItem] = player.actionQueue.splice(oldIndex, 1);
+      player.actionQueue.splice(newIndex, 0, movedItem);
+      return { success: true };
+  }
+
+  calculateQueueCost(actionQueue) {
+    const totalCost = {};
+    actionQueue.forEach(action => {
+        for (const type in action.skill.cost) {
+            totalCost[type] = (totalCost[type] || 0) + action.skill.cost[type];
+        }
+    });
+    return totalCost;
+  }
+
+  executeTurn() {
+    const player = this.players[this.activePlayerId];
+    const finalCost = this.calculateQueueCost(player.actionQueue);
+    
+    for (const type in finalCost) {
+        if (!player.chakra[type] || player.chakra[type] < finalCost[type]) {
+            this.log.push(`Execution failed: Not enough chakra.`);
+            return this.getGameState();
+        }
+    }
+
+    for (const type in finalCost) {
+        player.chakra[type] -= finalCost[type];
+    }
+
+    for (const action of player.actionQueue) {
+        if (this.isGameOver) break;
+        this.processSingleSkill(action.skill, action.casterId, [action.targetId]);
+    }
+    
+    player.actionQueue = [];
+    return this.nextTurn();
+  }
+
+  processSingleSkill(skill, casterId, targetIds) {
     const casterPlayer = this.players[this.activePlayerId];
     const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
-    
-    // --- NEW: Stun Check ---
-    // Check if the casting character is stunned at the beginning of the action.
-    if (casterChar.statuses.some(s => s.type === 'stun')) {
-        this.log.push(`${casterChar.name} is stunned and cannot act!`);
-        return; // Immediately end the turn
-    }
 
-    if (casterPlayer.cooldowns[skill.id] > 0) {
-        this.log.push(`${skill.name} is on cooldown for ${casterPlayer.cooldowns[skill.id]} more turn(s).`);
-        return; 
-    }
-    
-    for (const type in skill.cost) {
-      if (!casterPlayer.chakra[type] || casterPlayer.chakra[type] < skill.cost[type]) {
-        this.log.push(`Not enough ${type} chakra for ${skill.name}.`);
-        return;
-      }
-    }
-    
-    for (const type in skill.cost) {
-      casterPlayer.chakra[type] -= skill.cost[type];
-    }
-
-    if (skill.cooldown > 0) {
-        casterPlayer.cooldowns[skill.id] = skill.cooldown + 1; 
-    }
+    if (!casterChar || !casterChar.isAlive) return;
+    if (casterPlayer.cooldowns[skill.id] > 0) return;
+    if (skill.cooldown > 0) casterPlayer.cooldowns[skill.id] = skill.cooldown + 1;
     
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
     skill.effects.forEach(effect => {
-        let targets = [];
-        const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
-        const targetPlayerId = (effect.target === 'ally' || effect.target === 'self') ? this.activePlayerId : opponentId;
-        
-        if(effect.target === 'all_enemies') {
-          targets = this.players[opponentId].team.filter(c => c.isAlive);
-        } else {
-          targetIds.forEach(targetId => {
-              const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
-              if(playerToTarget) {
-                  const target = playerToTarget.team.find(c => c.instanceId === targetId);
-                  if (target) targets.push(target);
-              }
-          });
-        }
-  
-        targets.forEach(target => {
-          if (!target.isAlive) return;
-  
-          // --- NEW: Invulnerability Check ---
-          if (target.statuses.some(s => s.type === 'invulnerability')) {
-              this.log.push(`${target.name} is invulnerable. The attack had no effect!`);
-              return; // Skip all effects on this target
-          }
-
-          const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
-          if (dodgeStatus && effect.type === 'damage' && Math.random() < dodgeStatus.chance) {
-            this.log.push(`${target.name} dodged the attack!`);
-            return;
-          }
-  
-          switch(effect.type) {
-            case 'damage':
-              let damageToDeal = effect.value;
-              const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
-              if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
-              const initialDamage = damageToDeal; 
-              if (!effect.ignores_shield) {
-                  const shield = target.statuses.find(s => s.type === 'shield');
-                  if(shield) {
-                      if(shield.value >= damageToDeal) {
-                          shield.value -= damageToDeal;
-                          damageToDeal = 0;
-                      } else {
-                          damageToDeal -= shield.value;
-                          target.statuses = target.statuses.filter(s => s.type !== 'shield');
-                      }
-                  }
-              }
-            if (damageToDeal > 0) {
-              target.currentHp -= damageToDeal;
-              this.log.push(`${target.name} took ${damageToDeal} damage.`);
+      let targets = [];
+      const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+      
+      if(effect.target === 'all_enemies') {
+        targets = this.players[opponentId].team.filter(c => c.isAlive);
+      } else {
+        targetIds.forEach(targetId => {
+            const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
+            if(playerToTarget) {
+                const target = playerToTarget.team.find(c => c.instanceId === targetId);
+                if (target) targets.push(target);
             }
-              this.stats[this.activePlayerId].damageDealt += initialDamage;
-              this.log.push(`${target.name} took ${initialDamage} damage.`);
-              if (target.currentHp <= 0) {
-                target.isAlive = false;
-                target.currentHp = 0;
-                this.log.push(`${target.name} has been defeated!`);
-              }
-              break;
-            case 'heal':
-              const hpBeforeHeal = target.currentHp;
-              target.currentHp = Math.min(target.maxHp, target.currentHp + effect.value);
-              const actualHealAmount = target.currentHp - hpBeforeHeal;
-              if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
-              this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
-              break;
-            case 'add_shield':
-              target.statuses.push({ type: 'shield', value: effect.value });
-              this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
-              break;
-            case 'apply_status':
-              target.statuses.push({ type: effect.status, ...effect });
-              this.log.push(`${target.name} is now affected by ${effect.status}.`);
-              break;
-          }
         });
+      }
+
+      targets.forEach(target => {
+        if (!target.isAlive) return;
+        if (target.statuses.some(s => s.type === 'invulnerability')) {
+            this.log.push(`${target.name} is invulnerable. The attack had no effect!`);
+            return;
+        }
+        const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
+        if (dodgeStatus && effect.type === 'damage' && Math.random() < dodgeStatus.chance) {
+          this.log.push(`${target.name} dodged the attack!`);
+          return;
+        }
+        switch(effect.type) {
+          case 'damage':
+            let damageToDeal = effect.value;
+            const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
+            if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
+            const initialDamage = damageToDeal; 
+            if (!effect.ignores_shield) {
+                const shield = target.statuses.find(s => s.type === 'shield');
+                if(shield) {
+                    if(shield.value >= damageToDeal) {
+                        shield.value -= damageToDeal;
+                        damageToDeal = 0;
+                    } else {
+                        damageToDeal -= shield.value;
+                        target.statuses = target.statuses.filter(s => s.type !== 'shield');
+                    }
+                }
+            }
+            if (damageToDeal > 0) target.currentHp -= damageToDeal;
+            this.stats[this.activePlayerId].damageDealt += initialDamage;
+            this.log.push(`${target.name} took ${initialDamage} damage.`);
+            if (target.currentHp <= 0) {
+              target.isAlive = false;
+              target.currentHp = 0;
+              this.log.push(`${target.name} has been defeated!`);
+            }
+            break;
+          case 'heal':
+            const hpBeforeHeal = target.currentHp;
+            target.currentHp = Math.min(target.maxHp, target.currentHp + effect.value);
+            const actualHealAmount = target.currentHp - hpBeforeHeal;
+            if (actualHealAmount > 0) this.stats[this.activePlayerId].healingDone += actualHealAmount;
+            this.log.push(`${target.name} healed for ${actualHealAmount} HP.`);
+            break;
+          case 'add_shield':
+            target.statuses.push({ type: 'shield', value: effect.value });
+            this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
+            break;
+          case 'apply_status':
+            target.statuses.push({ type: effect.status, ...effect });
+            this.log.push(`${target.name} is now affected by ${effect.status}.`);
+            break;
+        }
       });
-    return this.nextTurn();
+    });
   }
 
   startGame() {
     this.log.push('Game has started!');
-    this.generateChakra();
-    return this.getGameState();
+    return this.getGameState(true);
   }
 
   processTurnBasedEffects(player) {
@@ -158,12 +206,13 @@ class Game {
         const newStatuses = [];
         char.statuses.forEach(status => {
             if (status.type === 'poison') {
-                char.currentHp -= status.damage;
-                this.log.push(`${target.name} took ${status.damage} damage from poison.`);
+                const poisonDamage = status.damage;
+                char.currentHp -= poisonDamage;
+                this.log.push(`${char.name} took ${poisonDamage} damage from poison!`);
                 if (char.currentHp <= 0) {
                     char.isAlive = false;
                     char.currentHp = 0;
-                    this.log.push(`${target.name} succumbed to poison!`);
+                    this.log.push(`${char.name} succumbed to poison!`);
                 }
             }
             if (status.duration > 1) {
@@ -183,7 +232,7 @@ class Game {
         if (!this.isGameOver) {
           this.isGameOver = true;
           const winnerId = Object.keys(this.players).find(id => parseInt(id, 10) !== parseInt(playerId, 10));
-          this.log.push(`--- Game Over! ${this.players[winnerId].playerId} is victorious! ---`);
+          this.log.push(`--- Game Over! ${this.players[winnerId].email} is victorious! ---`);
           processGameResults(this.getGameState());
         }
         break;
@@ -208,13 +257,16 @@ class Game {
     const currentIndex = playerIds.indexOf(this.activePlayerId);
     this.activePlayerId = playerIds[(currentIndex + 1) % playerIds.length];
 
-    this.log.push(`--- Turn ${this.turn}: ${this.players[this.activePlayerId].id}'s turn ---`);
+    this.log.push(`--- Turn ${this.turn}: It is now ${this.players[this.activePlayerId].email}'s turn ---`);
     this.generateChakra();
     this.checkGameOver();
     return this.getGameState();
   }
 
-  getGameState() {
+  getGameState(isInitial = false) {
+    if (isInitial) {
+        this.generateChakra();
+    }
     return {
       gameId: this.gameId,
       turn: this.turn,
