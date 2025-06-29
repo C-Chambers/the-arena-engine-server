@@ -43,6 +43,7 @@ class GameManager {
     } catch (err) {
       console.error(`Error fetching team for player ${playerId}:`, err);
     }
+    return Game.createRandomTeam();
   }
 
   async matchmakingTick() {
@@ -147,41 +148,56 @@ class GameManager {
 
   handlePlayerAction(gameId, playerId, action) {
     const game = this.games.get(gameId);
-    if (!game) return;
-
-    // --- NEW: Added a detailed debugging log here ---
-    if (game.activePlayerId !== playerId) {
-        console.error(`ACTION REJECTED: Player ${playerId} (type: ${typeof playerId}) tried to act, but it is player ${game.activePlayerId}'s (type: ${typeof game.activePlayerId}) turn.`);
-        return;
-    }
-    if (game.isGameOver) {
-        console.error(`ACTION REJECTED: Player ${playerId} tried to act, but game is over.`);
-        return;
+    if (!game || game.activePlayerId !== playerId || game.isGameOver) {
+      // Add a log for debugging why an action might be rejected
+      if (game && game.activePlayerId !== playerId) {
+        console.error(`Action rejected: Not player ${playerId}'s turn.`);
+      }
+      return;
     }
 
-    let newState;
-    if (action.type === 'USE_SKILL') {
-      const { skill, casterId, targetId } = action.payload;
-      newState = game.useSkill(skill, casterId, [targetId]); 
-    } else if (action.type === 'END_TURN') {
-      newState = game.nextTurn();
-    } else {
-      return; 
+    let result;
+    switch (action.type) {
+        case 'QUEUE_SKILL':
+            result = game.queueSkill(action.payload);
+            break;
+        case 'DEQUEUE_SKILL':
+            result = game.dequeueSkill(action.payload.queueIndex);
+            break;
+        case 'REORDER_QUEUE':
+            result = game.reorderQueue(action.payload.oldIndex, action.payload.newIndex);
+            break;
+        case 'EXECUTE_TURN':
+            result = { success: true, state: game.executeTurn() };
+            break;
+        default:
+            console.log(`Unknown action type: ${action.type}`);
+            return;
     }
-    if (!newState) return; 
 
-    const gameStateMessage = JSON.stringify({ type: 'GAME_UPDATE', state: newState });
-    Object.values(game.players).forEach(player => {
-        if (player.ws.readyState === player.ws.OPEN) player.ws.send(gameStateMessage);
-    });
+    if (result && result.success) {
+        const newState = result.state || game.getGameState();
+        const gameStateMessage = JSON.stringify({ type: 'GAME_UPDATE', state: newState });
+        
+        Object.values(game.players).forEach(player => {
+            if (player.ws.readyState === player.ws.OPEN) {
+              player.ws.send(gameStateMessage);
+            }
+        });
+    } else if (result) {
+        const player = game.players[playerId];
+        if (player.ws.readyState === player.ws.OPEN) {
+            player.ws.send(JSON.stringify({ type: 'ACTION_ERROR', message: result.message }));
+        }
+    }
+        
     this.onStatusUpdate('game-action');
   }
 
   broadcastQueueStatus() {
       const now = Date.now();
-      // For both new and veteran queues
       [...this.newPlayerQueue, ...this.veteranQueue].forEach(ws => {
-        const timeInQueue = Math.floor((now - ws.timeEnteredQueue) / 1000); // seconds
+        const timeInQueue = Math.floor((now - ws.timeEnteredQueue) / 1000);
         ws.send(JSON.stringify({
           type: 'STATUS',
           queue: this.newPlayerQueue.includes(ws) ? 'new' : 'veteran',
@@ -196,7 +212,7 @@ class GameManager {
         this.newPlayerQueue.splice(queueIndex, 1);
     } else {
         queueIndex = this.veteranQueue.findIndex(p => p.id === ws.id);
-    if (queueIndex > -1) {
+        if (queueIndex > -1) {
             this.veteranQueue.splice(queueIndex, 1);
         }
     }
