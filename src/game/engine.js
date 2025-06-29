@@ -36,8 +36,9 @@ class Game {
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
-
     const caster = player.team.find(c => c.instanceId === action.casterId);
+    
+    console.log(`Queueing up skill ${skill.name}`);
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
@@ -58,6 +59,8 @@ class Game {
     }
 
     player.actionQueue.push(action);
+    console.log(`Skill queued up: ${skill.name}`);
+    console.log(`Current queue: ${player.actionQueue}`);
     return { success: true };
   }
 
@@ -88,6 +91,7 @@ class Game {
   }
 
   executeTurn() {
+    console.log("Executing turn.");
     const player = this.players[this.activePlayerId];
     const finalCost = this.calculateQueueCost(player.actionQueue);
     
@@ -104,10 +108,12 @@ class Game {
 
     for (const action of player.actionQueue) {
         if (this.isGameOver) break;
+        console.log(`Activating skill ${action.skill.name}`);
         this.processSingleSkill(action.skill, action.casterId, [action.targetId]);
     }
     
     player.actionQueue = [];
+    console.log("Turn done. Ending turn");
     return this.nextTurn();
   }
 
