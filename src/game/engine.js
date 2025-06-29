@@ -15,7 +15,7 @@ class Game {
       [player1Info.id]: { damageDealt: 0, healingDone: 0 },
       [player2Info.id]: { damageDealt: 0, healingDone: 0 },
     };
-    this.turn = 0;
+    this.turn = 1;
     this.activePlayerId = player1Info.id;
     this.isGameOver = false;
     this.log = [];
