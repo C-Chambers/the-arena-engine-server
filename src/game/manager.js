@@ -193,7 +193,7 @@ class GameManager {
       [...this.newPlayerQueue, ...this.veteranQueue].forEach(ws => {
         const timeInQueue = Math.floor((now - ws.timeEnteredQueue) / 1000); // seconds
         ws.send(JSON.stringify({
-          type: 'QUEUE_STATUS',
+          type: 'STATUS',
           queue: this.newPlayerQueue.includes(ws) ? 'new' : 'veteran',
           timeInQueue
         }));
