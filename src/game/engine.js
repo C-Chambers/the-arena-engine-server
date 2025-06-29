@@ -8,8 +8,9 @@ class Game {
   constructor(player1Info, player2Info) {
     this.gameId = uuidv4();
     this.players = {
-      [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {} },
-      [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {} },
+      // --- NEW: Add a cooldowns object for each player ---
+      [player1Info.id]: { ...player1Info, team: player1Info.team, chakra: {}, cooldowns: {} },
+      [player2Info.id]: { ...player2Info, team: player2Info.team, chakra: {}, cooldowns: {} },
     };
     this.stats = {
       [player1Info.id]: { damageDealt: 0, healingDone: 0 },
@@ -27,14 +28,19 @@ class Game {
     player.chakra = {};
     for (let i = 0; i < 6; i++) {
       const randomChakra = chakraTypes[Math.floor(Math.random() * chakraTypes.length)];
-      player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
+    player.chakra[randomChakra] = (player.chakra[randomChakra] || 0) + 1;
     }
   }
 
   useSkill(skill, casterId, targetIds) {
     const casterPlayer = this.players[this.activePlayerId];
-    // --- FIX: Ensure the opponent ID is found using a number-to-number comparison ---
     const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+    
+    // --- NEW: Check if the skill is on cooldown ---
+    if (casterPlayer.cooldowns[skill.id] > 0) {
+        this.log.push(`${skill.name} is on cooldown for ${casterPlayer.cooldowns[skill.id]} more turn(s).`);
+        return; // Do not proceed
+    }
     
     for (const type in skill.cost) {
       if (!casterPlayer.chakra[type] || casterPlayer.chakra[type] < skill.cost[type]) {
@@ -47,6 +53,12 @@ class Game {
       casterPlayer.chakra[type] -= skill.cost[type];
     }
     
+    // --- NEW: Put the skill on cooldown if it has one ---
+    if (skill.cooldown > 0) {
+        casterPlayer.cooldowns[skill.id] = skill.cooldown;
+        this.log.push(`${skill.name} is now on cooldown for ${skill.cooldown} turn(s).`);
+    }
+
     const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
     this.log.push(`${casterChar.name} used ${skill.name}.`);
 
@@ -58,7 +70,6 @@ class Game {
         targets = this.players[opponentId].team.filter(c => c.isAlive);
       } else {
         targetIds.forEach(targetId => {
-            // Find the correct player object to get the team from
             const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
             if(playerToTarget) {
                 const target = playerToTarget.team.find(c => c.instanceId === targetId);
@@ -85,9 +96,7 @@ class Game {
             if(vulnerableStatus) {
                 damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
             }
-            
             const initialDamage = damageToDeal; 
-            
             if (!effect.ignores_shield) {
                 const shield = target.statuses.find(s => s.type === 'shield');
                 if(shield) {
@@ -107,7 +116,6 @@ class Game {
               this.log.push(`${target.name} took ${damageToDeal} damage.`);
             }
             this.stats[this.activePlayerId].damageDealt += damageToDeal;
-
             if (target.currentHp <= 0) {
               target.isAlive = false;
               target.currentHp = 0;
@@ -173,8 +181,8 @@ class Game {
       if (teamIsDefeated) {
         if (!this.isGameOver) {
           this.isGameOver = true;
-          const winnerId = Object.keys(this.players).find(id => id !== playerId);
-          this.log.push(`--- Game Over! ${winnerId} is victorious! ---`);
+          const winnerId = Object.keys(this.players).find(id => parseInt(id, 10) !== parseInt(playerId, 10));
+          this.log.push(`--- Game Over! ${this.players[winnerId].playerId} is victorious! ---`);
           processGameResults(this.getGameState());
         }
         break;
@@ -183,7 +191,16 @@ class Game {
   }
 
   nextTurn() {
-    this.processTurnBasedEffects(this.players[this.activePlayerId]);
+    const endingTurnPlayer = this.players[this.activePlayerId];
+    this.processTurnBasedEffects(endingTurnPlayer);
+
+    // --- NEW: Decrement skill cooldowns for the player whose turn is ending ---
+    for (const skillId in endingTurnPlayer.cooldowns) {
+        if (endingTurnPlayer.cooldowns[skillId] > 0) {
+            endingTurnPlayer.cooldowns[skillId]--;
+        }
+    }
+
     this.turn++;
     const playerIds = Object.keys(this.players).map(id => parseInt(id, 10));
     const currentIndex = playerIds.indexOf(this.activePlayerId);

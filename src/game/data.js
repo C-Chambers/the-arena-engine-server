@@ -97,7 +97,7 @@ const characters = [
         description: 'Apply a shield to an ally that absorbs 40 damage.',
         cost: { Power: 2 },
         effects: [
-          { type: 'add_shield', value: 40, target: 'ally' },
+          { type: 'add_shield', value: 40, target: 'ally', duration: 2 },
         ],
       },
       {
