@@ -31,7 +31,6 @@ class Game {
     }
   }
 
-  // --- UPDATED: Overhauled Cost Validation Logic ---
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
@@ -112,6 +111,7 @@ class Game {
     return totalCost;
   }
 
+  // --- UPDATED: Overhauled Cost Deduction Logic ---
   executeTurn() {
     const player = this.players[this.activePlayerId];
     const finalCost = this.calculateQueueCost(player.actionQueue);
@@ -121,11 +121,30 @@ class Game {
         return this.getGameState();
     }
 
-    // Cost deduction logic will be updated in the next step
+    // 1. Deduct Specific Costs
     for (const type in finalCost) {
-        player.chakra[type] = (player.chakra[type] || 0) - (finalCost[type] || 0);
+        if (type !== 'Random') {
+            player.chakra[type] -= finalCost[type];
+        }
     }
 
+    // 2. Deduct Random Costs
+    let randomCostToPay = finalCost['Random'] || 0;
+    if (randomCostToPay > 0) {
+        // Create a sorted list of available chakra types, from most abundant to least
+        const sortedChakra = Object.entries(player.chakra)
+            .filter(([, count]) => count > 0)
+            .sort((a, b) => b[1] - a[1]);
+
+        for (const [type, count] of sortedChakra) {
+            if (randomCostToPay === 0) break;
+            const amountToDeduct = Math.min(randomCostToPay, count);
+            player.chakra[type] -= amountToDeduct;
+            randomCostToPay -= amountToDeduct;
+        }
+    }
+
+    // Process each action in the queue
     for (const action of player.actionQueue) {
         if (this.isGameOver) break;
         this.processSingleSkill(action.skill, action.casterId, [action.targetId]);
