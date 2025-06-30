@@ -188,11 +188,11 @@ class Game {
 
       targets.forEach(target => {
         if (!target.isAlive) return;
-        if (target.statuses.some(s => s.type === 'invulnerability')) {
+        if (target.statuses.some(s => s.status === 'invulnerable')) {
             this.log.push(`${target.name} is invulnerable. The attack had no effect!`);
             return;
         }
-        const dodgeStatus = target.statuses.find(s => s.type === 'dodge');
+        const dodgeStatus = target.statuses.find(s => s.status === 'dodge');
         if (dodgeStatus && effect.type === 'damage' && Math.random() < dodgeStatus.chance) {
           this.log.push(`${target.name} dodged the attack!`);
           return;
@@ -242,6 +242,7 @@ class Game {
                 ...effect, // This includes type, status, duration, etc. from the skill definition
                 sourceSkill: {
                     id: skill.id,
+                    name: skill.name,
                     iconUrl: skill.icon_url, // Pass the icon URL
                 }
             };
