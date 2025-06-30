@@ -160,6 +160,12 @@ class Game {
     const casterChar = casterPlayer.team.find(c => c.instanceId === casterId);
 
     if (!casterChar || !casterChar.isAlive) return;
+    
+    if (casterChar.statuses.some(s => s.type === 'stun')) {
+        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+        return;
+    }
+    
     if (casterPlayer.cooldowns[skill.id] > 0) return;
     if (skill.cooldown > 0) casterPlayer.cooldowns[skill.id] = skill.cooldown + 1;
     
@@ -195,8 +201,24 @@ class Game {
         switch(effect.type) {
           case 'damage':
             let damageToDeal = effect.value;
+
+            // --- NEW: Empower Skill Logic ---
+            const empowerStatus = casterChar.statuses.find(s => s.type === 'empower_skill' && s.skillId === skill.id);
+            if (empowerStatus) {
+                damageToDeal += empowerStatus.damageBonus;
+                this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
+            }
+
             const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
+
+            const reductionStatuses = target.statuses.filter(s => s.type === 'damage_reduction');
+            if (reductionStatuses.length > 0) {
+                const totalReduction = reductionStatuses.reduce((sum, status) => sum + status.value, 0);
+                damageToDeal = Math.max(0, damageToDeal - totalReduction);
+                this.log.push(`${target.name}'s damage reduction lowered damage by ${totalReduction}.`);
+            }
+            
             const initialDamage = damageToDeal; 
             if (!effect.ignores_shield) {
                 const shield = target.statuses.find(s => s.type === 'shield');
