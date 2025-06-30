@@ -34,8 +34,8 @@ class Game {
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
-
     const caster = player.team.find(c => c.instanceId === action.casterId);
+    
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
@@ -44,14 +44,13 @@ class Game {
         return { success: false, message: `${caster.name} has already queued a skill this turn.` };
     }
     
-    // --- New Two-Pass Validation Algorithm ---
-    const currentQueueCost = this.calculateQueueCost(player.actionQueue);
-    const combinedCost = { ...currentQueueCost };
+    const currentCost = this.calculateQueueCost(player.actionQueue);
+    const newTotalCost = { ...currentCost };
     for (const type in skill.cost) {
-        combinedCost[type] = (combinedCost[type] || 0) + skill.cost[type];
+        newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
     }
     
-    if (!this.canAffordCost(player.chakra, combinedCost)) {
+    if (!this.canAffordCost(player.chakra, newTotalCost)) {
         return { success: false, message: `Not enough chakra.` };
     }
 
@@ -62,26 +61,24 @@ class Game {
   canAffordCost(availableChakra, totalCost) {
     const tempChakra = { ...availableChakra };
     
-    // First Pass: Deduct specific costs
     for (const type in totalCost) {
         if (type !== 'Random') {
             if (!tempChakra[type] || tempChakra[type] < totalCost[type]) {
-                return false; // Not enough specific chakra
+                return false; 
             }
             tempChakra[type] -= totalCost[type];
         }
     }
     
-    // Second Pass: Check if remaining chakra can cover the random cost
     const randomCost = totalCost['Random'] || 0;
     if (randomCost > 0) {
         const remainingChakraCount = Object.values(tempChakra).reduce((sum, count) => sum + count, 0);
         if (remainingChakraCount < randomCost) {
-            return false; // Not enough remaining chakra for the random cost
+            return false;
         }
     }
     
-    return true; // The cost can be paid
+    return true;
   }
 
 
@@ -111,7 +108,6 @@ class Game {
     return totalCost;
   }
 
-  // --- UPDATED: Overhauled Cost Deduction Logic ---
   executeTurn() {
     const player = this.players[this.activePlayerId];
     const finalCost = this.calculateQueueCost(player.actionQueue);
@@ -121,7 +117,6 @@ class Game {
         return this.getGameState();
     }
 
-    // 1. Deduct Specific Costs
     for (const type in finalCost) {
         if (type !== 'Random') {
             player.chakra[type] -= finalCost[type];
