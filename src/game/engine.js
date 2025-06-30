@@ -31,6 +31,7 @@ class Game {
     }
   }
 
+  // UPDATED: queueSkill now validates if a skill is enabled
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
@@ -39,13 +40,21 @@ class Game {
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
+
+    // --- NEW: Enable Skill Validation ---
+    if (skill.is_locked_by_default) {
+      const isEnabled = caster.statuses.some(s => s.type === 'enable_skill' && s.skillId === skill.id);
+      if (!isEnabled) {
+        return { success: false, message: `${skill.name} is not currently enabled.` };
+      }
+    }
     
     if (player.actionQueue.some(a => a.casterId === action.casterId)) {
         return { success: false, message: `${caster.name} has already queued a skill this turn.` };
     }
     
-    const currentCost = this.calculateQueueCost(player.actionQueue);
-    const newTotalCost = { ...currentCost };
+    const currentQueueCost = this.calculateQueueCost(player.actionQueue);
+    const newTotalCost = { ...currentQueueCost };
     for (const type in skill.cost) {
         newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
     }
