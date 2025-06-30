@@ -212,7 +212,7 @@ class Game {
             let damageToDeal = effect.value;
 
             // --- NEW: Empower Skill Logic ---
-            const empowerStatus = casterChar.statuses.find(s => s.type === 'empower_skill' && s.skillId === skill.id);
+            const empowerStatus = casterChar.statuses.find(s => s.status === 'empower_skill' && s.skillId === skill.id);
             if (empowerStatus) {
                 damageToDeal += empowerStatus.damageBonus;
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
