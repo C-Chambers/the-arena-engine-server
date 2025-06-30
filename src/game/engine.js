@@ -132,7 +132,7 @@ class Game {
     let randomCostToPay = finalCost['Random'] || 0;
     if (randomCostToPay > 0) {
         // Create a sorted list of available chakra types, from most abundant to least
-        const sortedChakra = Object.entries(player.chakra)
+        let sortedChakra = Object.entries(player.chakra)
             .filter(([, count]) => count > 0)
             .sort((a, b) => b[1] - a[1]);
 
