@@ -215,7 +215,7 @@ class Game {
         if (!char.isAlive) return;
         const newStatuses = [];
         char.statuses.forEach(status => {
-            if (status.type === 'poison') {
+            if (status.status === 'poison') {
                 const poisonDamage = status.damage;
                 char.currentHp -= poisonDamage;
                 this.log.push(`${char.name} took ${poisonDamage} damage from poison!`);
