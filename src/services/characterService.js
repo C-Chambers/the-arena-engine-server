@@ -9,10 +9,13 @@ const loadAllGameData = async () => {
   try {
     console.log('Loading all game data from database...');
     
-    // UPDATED: Query now includes the new skill classification and lock columns
+    // --- UPDATED: Corrected the GROUP BY clause in the SQL query ---
     const charactersQuery = `
       SELECT
-        c.character_id, c.name, c.max_hp, c.image_url,
+        c.character_id, 
+        c.name, 
+        c.max_hp, 
+        c.image_url,
         json_agg(
           json_build_object(
             'id', s.skill_id, 
@@ -25,12 +28,12 @@ const loadAllGameData = async () => {
             'skill_range', s.skill_range,
             'skill_persistence', s.skill_persistence,
             'icon_url', s.icon_url,
-            'is_locked_by_default', s.is_locked_by_default -- Include the new field
+            'is_locked_by_default', s.is_locked_by_default
           )
         ) FILTER (WHERE s.skill_id IS NOT NULL) AS skills
       FROM arena_engine_schema.characters AS c
-      LEFT JOIN arena_engine_schema.skills AS s ON c.character_id = c.character_id
-      GROUP BY c.character_id;
+      LEFT JOIN arena_engine_schema.skills AS s ON c.character_id = s.character_id
+      GROUP BY c.character_id, c.name, c.max_hp, c.image_url;
     `;
     const { rows: characterRows } = await pool.query(charactersQuery);
     
