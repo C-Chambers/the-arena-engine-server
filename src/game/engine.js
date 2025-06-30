@@ -43,7 +43,7 @@ class Game {
 
     // --- NEW: Enable Skill Validation ---
     if (skill.is_locked_by_default) {
-      const isEnabled = caster.statuses.some(s => s.type === 'enable_skill' && s.skillId === skill.id);
+      const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId === skill.id);
       if (!isEnabled) {
         return { success: false, message: `${skill.name} is not currently enabled.` };
       }
@@ -170,7 +170,7 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
-    if (casterChar.statuses.some(s => s.type === 'stun')) {
+    if (casterChar.statuses.some(s => s.status === 'stun')) {
         this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
         return;
     }
@@ -218,10 +218,10 @@ class Game {
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
 
-            const vulnerableStatus = target.statuses.find(s => s.type === 'vulnerable');
+            const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
-            const reductionStatuses = target.statuses.filter(s => s.type === 'damage_reduction');
+            const reductionStatuses = target.statuses.filter(s => s.status === 'damage_reduction');
             if (reductionStatuses.length > 0) {
                 const totalReduction = reductionStatuses.reduce((sum, status) => sum + status.value, 0);
                 damageToDeal = Math.max(0, damageToDeal - totalReduction);
@@ -230,14 +230,14 @@ class Game {
             
             const initialDamage = damageToDeal; 
             if (!effect.ignores_shield) {
-                const shield = target.statuses.find(s => s.type === 'shield');
+                const shield = target.statuses.find(s => s.status === 'shield');
                 if(shield) {
                     if(shield.value >= damageToDeal) {
                         shield.value -= damageToDeal;
                         damageToDeal = 0;
                     } else {
                         damageToDeal -= shield.value;
-                        target.statuses = target.statuses.filter(s => s.type !== 'shield');
+                        target.statuses = target.statuses.filter(s => s.status !== 'shield');
                     }
                 }
             }
@@ -303,7 +303,7 @@ class Game {
             if (status.duration > 1) {
                 newStatuses.push({ ...status, duration: status.duration - 1 });
             } else {
-                this.log.push(`${char.name}'s ${status.type} effect has worn off.`);
+                this.log.push(`${char.name}'s ${status.status} effect has worn off.`);
             }
         });
         char.statuses = newStatuses;
