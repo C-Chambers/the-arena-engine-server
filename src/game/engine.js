@@ -31,12 +31,12 @@ class Game {
     }
   }
 
+  // --- UPDATED: Overhauled Cost Validation Logic ---
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
+
     const caster = player.team.find(c => c.instanceId === action.casterId);
-    
-    console.log(`Queueing up skill ${skill.name}`);
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
@@ -45,22 +45,46 @@ class Game {
         return { success: false, message: `${caster.name} has already queued a skill this turn.` };
     }
     
-    const currentCost = this.calculateQueueCost(player.actionQueue);
-    const newTotalCost = { ...currentCost };
+    // --- New Two-Pass Validation Algorithm ---
+    const currentQueueCost = this.calculateQueueCost(player.actionQueue);
+    const combinedCost = { ...currentQueueCost };
     for (const type in skill.cost) {
-        newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
+        combinedCost[type] = (combinedCost[type] || 0) + skill.cost[type];
     }
-    for (const type in newTotalCost) {
-        if (!player.chakra[type] || player.chakra[type] < newTotalCost[type]) {
-            return { success: false, message: `Not enough ${type} chakra.`};
-        }
+    
+    if (!this.canAffordCost(player.chakra, combinedCost)) {
+        return { success: false, message: `Not enough chakra.` };
     }
 
     player.actionQueue.push(action);
-    console.log(`Skill queued up: ${skill.name}`);
-    console.log(`Current queue: ${player.actionQueue}`);
     return { success: true };
   }
+  
+  canAffordCost(availableChakra, totalCost) {
+    const tempChakra = { ...availableChakra };
+    
+    // First Pass: Deduct specific costs
+    for (const type in totalCost) {
+        if (type !== 'Random') {
+            if (!tempChakra[type] || tempChakra[type] < totalCost[type]) {
+                return false; // Not enough specific chakra
+            }
+            tempChakra[type] -= totalCost[type];
+        }
+    }
+    
+    // Second Pass: Check if remaining chakra can cover the random cost
+    const randomCost = totalCost['Random'] || 0;
+    if (randomCost > 0) {
+        const remainingChakraCount = Object.values(tempChakra).reduce((sum, count) => sum + count, 0);
+        if (remainingChakraCount < randomCost) {
+            return false; // Not enough remaining chakra for the random cost
+        }
+    }
+    
+    return true; // The cost can be paid
+  }
+
 
   dequeueSkill(queueIndex) {
       const player = this.players[this.activePlayerId];
@@ -92,15 +116,14 @@ class Game {
     const player = this.players[this.activePlayerId];
     const finalCost = this.calculateQueueCost(player.actionQueue);
     
-    for (const type in finalCost) {
-        if (!player.chakra[type] || player.chakra[type] < finalCost[type]) {
-            this.log.push(`Execution failed: Not enough chakra.`);
-            return this.getGameState();
-        }
+    if (!this.canAffordCost(player.chakra, finalCost)) {
+        this.log.push(`Execution failed: Not enough chakra.`);
+        return this.getGameState();
     }
 
+    // Cost deduction logic will be updated in the next step
     for (const type in finalCost) {
-        player.chakra[type] -= finalCost[type];
+        player.chakra[type] = (player.chakra[type] || 0) - (finalCost[type] || 0);
     }
 
     for (const action of player.actionQueue) {
