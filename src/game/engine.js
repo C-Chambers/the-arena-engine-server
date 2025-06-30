@@ -141,6 +141,11 @@ class Game {
             const amountToDeduct = Math.min(randomCostToPay, count);
             player.chakra[type] -= amountToDeduct;
             randomCostToPay -= amountToDeduct;
+
+            //Re-sort the chakra to grab from the most abundant again
+            sortedChakra = Object.entries(player.chakra)
+            .filter(([, count]) => count > 0)
+            .sort((a, b) => b[1] - a[1]);
         }
     }
 
