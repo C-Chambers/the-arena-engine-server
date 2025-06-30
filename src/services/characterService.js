@@ -23,7 +23,8 @@ const loadAllGameData = async () => {
             'cooldown', s.cooldown,
             'skill_class', s.skill_class,
             'skill_range', s.skill_range,
-            'skill_persistence', s.skill_persistence
+            'skill_persistence', s.skill_persistence,
+            'icon_url', s.icon_url
           )
         ) FILTER (WHERE s.skill_id IS NOT NULL) AS skills
       FROM arena_engine_schema.characters AS c

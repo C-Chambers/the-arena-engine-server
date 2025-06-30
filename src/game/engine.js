@@ -31,8 +31,6 @@ class Game {
     }
   }
 
-  // --- NEW: Skill Stack Logic ---
-
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
@@ -91,7 +89,6 @@ class Game {
   }
 
   executeTurn() {
-    console.log("Executing turn.");
     const player = this.players[this.activePlayerId];
     const finalCost = this.calculateQueueCost(player.actionQueue);
     
@@ -108,12 +105,10 @@ class Game {
 
     for (const action of player.actionQueue) {
         if (this.isGameOver) break;
-        console.log(`Activating skill ${action.skill.name}`);
         this.processSingleSkill(action.skill, action.casterId, [action.targetId]);
     }
     
     player.actionQueue = [];
-    console.log("Turn done. Ending turn");
     return this.nextTurn();
   }
 
@@ -193,7 +188,16 @@ class Game {
             this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
             break;
           case 'apply_status':
-            target.statuses.push({ type: effect.status, ...effect });
+            // --- UPDATED LOGIC ---
+            // Create the new status object with the source skill information
+            const newStatus = {
+                ...effect, // This includes type, status, duration, etc. from the skill definition
+                sourceSkill: {
+                    id: skill.id,
+                    iconUrl: skill.icon_url, // Pass the icon URL
+                }
+            };
+            target.statuses.push(newStatus);
             this.log.push(`${target.name} is now affected by ${effect.status}.`);
             break;
         }
