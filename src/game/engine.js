@@ -138,7 +138,8 @@ class Game {
 
         for (const [type, count] of sortedChakra) {
             if (randomCostToPay === 0) break;
-            const amountToDeduct = Math.min(randomCostToPay, count);
+            //const amountToDeduct = Math.min(randomCostToPay, count);
+            const amountToDeduct = 1; //Deduct 1 chakra at time, to deduct across the board evenly
             player.chakra[type] -= amountToDeduct;
             randomCostToPay -= amountToDeduct;
 
