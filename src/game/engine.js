@@ -40,7 +40,7 @@ class Game {
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
-
+    
     // --- NEW: Enable Skill Validation ---
     if (skill.is_locked_by_default) {
       const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId === skill.id);
@@ -53,8 +53,8 @@ class Game {
         return { success: false, message: `${caster.name} has already queued a skill this turn.` };
     }
     
-    const currentQueueCost = this.calculateQueueCost(player.actionQueue);
-    const newTotalCost = { ...currentQueueCost };
+    const currentCost = this.calculateQueueCost(player.actionQueue);
+    const newTotalCost = { ...currentCost };
     for (const type in skill.cost) {
         newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
     }
@@ -198,6 +198,15 @@ class Game {
 
       targets.forEach(target => {
         if (!target.isAlive) return;
+
+        // --- NEW: Effect Immunity Check ---
+        const isImmune = target.statuses.some(s => s.type === 'effect_immunity');
+        const isDamagingOrHealing = effect.type === 'damage' || effect.type === 'heal';
+        if (isImmune && !isDamagingOrHealing) {
+            this.log.push(`${target.name} is immune to the non-damaging effects of ${skill.name}!`);
+            return; // This acts like 'continue' for a forEach loop
+        }
+
         if (target.statuses.some(s => s.status === 'invulnerable')) {
             this.log.push(`${target.name} is invulnerable. The attack had no effect!`);
             return;
