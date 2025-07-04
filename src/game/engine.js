@@ -40,7 +40,7 @@ class Game {
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
-    
+
     // --- NEW: Enable Skill Validation ---
     if (skill.is_locked_by_default) {
       const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId === skill.id);
@@ -170,9 +170,22 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
-    if (casterChar.statuses.some(s => s.status === 'stun')) {
-        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
-        return;
+    // --- UPDATED: Targeted Stun Logic ---
+    const stunStatuses = casterChar.statuses.filter(s => s.status === 'stun');
+    if (stunStatuses.length > 0) {
+        const isStunned = stunStatuses.some(stun => {
+            // If the classes array is empty or not present, it stuns ALL skills
+            if (!stun.classes || stun.classes.length === 0) {
+                return true; 
+            }
+            // Otherwise, check if the skill's class is in the stun's list
+            return stun.classes.includes(skill.skill_class);
+        });
+
+        if (isStunned) {
+            this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+            return; // Skip this skill
+        }
     }
     
     if (casterPlayer.cooldowns[skill.id] > 0) return;
@@ -204,7 +217,7 @@ class Game {
         const isDamagingOrHealing = effect.type === 'damage' || effect.type === 'heal';
         if (isImmune && !isDamagingOrHealing) {
             this.log.push(`${target.name} is immune to the non-damaging effects of ${skill.name}!`);
-            return; // This acts like 'continue' for a forEach loop
+            return;
         }
 
         if (target.statuses.some(s => s.status === 'invulnerable')) {
@@ -236,7 +249,6 @@ class Game {
                 damageToDeal = Math.max(0, damageToDeal - totalReduction);
                 this.log.push(`${target.name}'s damage reduction lowered damage by ${totalReduction}.`);
             }
-            
             const initialDamage = damageToDeal; 
             if (!effect.ignores_shield) {
                 const shield = target.statuses.find(s => s.status === 'shield');
@@ -274,11 +286,11 @@ class Game {
             // --- UPDATED LOGIC ---
             // Create the new status object with the source skill information
             const newStatus = {
-                ...effect, // This includes type, status, duration, etc. from the skill definition
+                ...effect,
                 sourceSkill: {
                     id: skill.id,
                     name: skill.name,
-                    iconUrl: skill.icon_url, // Pass the icon URL
+                    iconUrl: skill.icon_url,
                 }
             };
             target.statuses.push(newStatus);

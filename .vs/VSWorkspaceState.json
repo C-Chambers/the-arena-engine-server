@@ -11,6 +11,6 @@
     "\\src\\routes",
     "\\src\\services"
   ],
-  "SelectedNode": "\\src\\server.js",
+  "SelectedNode": "\\src\\services\\characterService.js",
   "PreviewInSolutionExplorer": false
 }
