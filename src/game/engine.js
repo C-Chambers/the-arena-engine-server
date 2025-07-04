@@ -31,7 +31,6 @@ class Game {
     }
   }
 
-  // UPDATED: queueSkill now validates if a skill is enabled
   queueSkill(action) {
     const player = this.players[this.activePlayerId];
     const { skill } = action;
@@ -40,8 +39,7 @@ class Game {
     if (!caster || !caster.isAlive) {
       return { success: false, message: "Invalid caster." };
     }
-
-    // --- NEW: Enable Skill Validation ---
+    
     if (skill.is_locked_by_default) {
       const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId === skill.id);
       if (!isEnabled) {
@@ -154,7 +152,6 @@ class Game {
         }
     }
 
-    // Process each action in the queue
     for (const action of player.actionQueue) {
         if (this.isGameOver) break;
         this.processSingleSkill(action.skill, action.casterId, [action.targetId]);
@@ -183,9 +180,8 @@ class Game {
         });
 
         if (isStunned) {
-            this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
-            return; // Skip this skill
-        }
+        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+        return;
     }
     
     if (casterPlayer.cooldowns[skill.id] > 0) return;
@@ -243,12 +239,26 @@ class Game {
             const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
+            // --- UPDATED: Damage Reduction Logic ---
             const reductionStatuses = target.statuses.filter(s => s.status === 'damage_reduction');
             if (reductionStatuses.length > 0) {
-                const totalReduction = reductionStatuses.reduce((sum, status) => sum + status.value, 0);
-                damageToDeal = Math.max(0, damageToDeal - totalReduction);
-                this.log.push(`${target.name}'s damage reduction lowered damage by ${totalReduction}.`);
+                // First, apply flat reduction
+                const flatReduction = reductionStatuses
+                    .filter(s => !s.reduction_type || s.reduction_type === 'flat')
+                    .reduce((sum, status) => sum + status.value, 0);
+                damageToDeal = Math.max(0, damageToDeal - flatReduction);
+                if (flatReduction > 0) this.log.push(`${target.name}'s damage reduction lowered damage by ${flatReduction}.`);
+                
+                // Then, apply percentage reduction to the remaining damage
+                const percentageReductionStatuses = reductionStatuses.filter(s => s.reduction_type === 'percentage');
+                if (percentageReductionStatuses.length > 0) {
+                    const totalPercentage = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
+                    const damageReduced = Math.round(damageToDeal * totalPercentage);
+                    damageToDeal -= damageReduced;
+                    this.log.push(`${target.name}'s damage reduction lowered damage by an additional ${totalPercentage * 100}%.`);
+                }
             }
+            
             const initialDamage = damageToDeal; 
             if (!effect.ignores_shield) {
                 const shield = target.statuses.find(s => s.status === 'shield');
@@ -283,8 +293,6 @@ class Game {
             this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
             break;
           case 'apply_status':
-            // --- UPDATED LOGIC ---
-            // Create the new status object with the source skill information
             const newStatus = {
                 ...effect,
                 sourceSkill: {
