@@ -130,10 +130,8 @@ class Game {
         }
     }
 
-    // 2. Deduct Random Costs
     let randomCostToPay = finalCost['Random'] || 0;
     if (randomCostToPay > 0) {
-        // Create a sorted list of available chakra types, from most abundant to least
         let sortedChakra = Object.entries(player.chakra)
             .filter(([, count]) => count > 0)
             .sort((a, b) => b[1] - a[1]);
@@ -180,8 +178,9 @@ class Game {
         });
 
         if (isStunned) {
-        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
-        return;
+            this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+            return;
+        }
     }
     
     if (casterPlayer.cooldowns[skill.id] > 0) return;
@@ -235,7 +234,6 @@ class Game {
                 damageToDeal += empowerStatus.damageBonus;
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
-
             const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
@@ -394,4 +392,3 @@ class Game {
 }
 
 module.exports = Game;
- 
