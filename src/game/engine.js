@@ -178,8 +178,9 @@ class Game {
         });
 
         if (isStunned) {
-        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
-        return;
+            this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+            return;
+        }
     }
     
     if (casterPlayer.cooldowns[skill.id] > 0) return;
