@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "G:\\The Arena Game\\the-arena-engine-server\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\services\\characterService.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\services\\characterService.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\game\\engine.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\game\\engine.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\services\\characterService.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\services\\characterService.js||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\The Arena Game\\the-arena-engine-server\\src\\server.js||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -46,17 +46,17 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "engine.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\game\\engine.js",
               "RelativeDocumentMoniker": "src\\game\\engine.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\game\\engine.js",
               "RelativeToolTip": "src\\game\\engine.js",
-              "ViewState": "AgIAAOsAAAAAAAAAAAAAAG8BAAADAAAAAAAAAA==",
+              "ViewState": "AgIAAHYBAAAAAAAAAAAowJQBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-29T01:22:52.021Z",
               "IsPinned": true,
@@ -73,8 +73,7 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAK0AAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-28T03:37:48.01Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -87,18 +86,21 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-06-27T23:28:27.536Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "characterService.js",
               "DocumentMoniker": "G:\\The Arena Game\\the-arena-engine-server\\src\\services\\characterService.js",
               "RelativeDocumentMoniker": "src\\services\\characterService.js",
               "ToolTip": "G:\\The Arena Game\\the-arena-engine-server\\src\\services\\characterService.js",
               "RelativeToolTip": "src\\services\\characterService.js",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAAAwAAAAZAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABoAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-07-01T01:55:02.356Z",
               "EditorCaption": ""
@@ -113,12 +115,7 @@
               "RelativeToolTip": "src\\config\\database.js",
               "ViewState": "AgIAAB0AAAAAAAAAAAAAAB0AAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-30T17:23:28.983Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "WhenOpened": "2025-06-30T17:23:28.983Z"
             },
             {
               "$type": "Document",
@@ -142,8 +139,7 @@
               "RelativeToolTip": "src\\controllers\\adminController.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T01:31:38.277Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T01:31:38.277Z"
             },
             {
               "$type": "Document",
@@ -155,8 +151,7 @@
               "RelativeToolTip": "src\\routes\\admin.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAtwBAAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-06-28T01:31:30.687Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-28T01:31:30.687Z"
             },
             {
               "$type": "Document",

@@ -178,9 +178,8 @@ class Game {
         });
 
         if (isStunned) {
-            this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
-            return;
-        }
+        this.log.push(`${casterChar.name} is stunned and cannot use ${skill.name}!`);
+        return;
     }
     
     if (casterPlayer.cooldowns[skill.id] > 0) return;
@@ -234,6 +233,14 @@ class Game {
                 damageToDeal += empowerStatus.damageBonus;
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
+
+            // --- NEW: Conditional Damage for Sharingan Mark ---
+            const sharinganMark = target.statuses.find(s => s.status === 'sharingan_mark' && s.casterInstanceId === casterId);
+            if (sharinganMark && effect.bonus_if_marked) {
+                damageToDeal += effect.bonus_if_marked;
+                this.log.push(`${target.name} is marked by ${casterChar.name}'s Sharingan, taking bonus damage!`);
+            }
+
             const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
@@ -291,8 +298,10 @@ class Game {
             this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
             break;
           case 'apply_status':
+            // --- NEW: Stamping the debuff with the caster's ID ---
             const newStatus = {
                 ...effect,
+                casterInstanceId: casterId, // Add the caster's unique ID to the status
                 sourceSkill: {
                     id: skill.id,
                     name: skill.name,
