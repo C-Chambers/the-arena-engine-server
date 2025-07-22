@@ -32,8 +32,10 @@ This document summarizes the backend implementation for the new character "Inuzu
 
 **How it works**:
 1. When calculating if a skill can be afforded, check if caster has `cost_reduction` status
-2. If found, modify the cost by the `cost_change` value (negative numbers reduce cost)
-3. Apply the modified cost when validating and deducting chakra
+2. If found, iterate through the `cost_change` object which contains chakra types and their reduction amounts
+3. For each chakra type, reduce the cost by the specified amount (negative numbers reduce cost)
+4. Ensure costs cannot be reduced below 0
+5. Apply the modified cost when validating and deducting chakra
 
 ### Step 1.4: Targeting Restriction & Buff Immunity
 **Location**: `queueSkill()` and `processSingleSkill()` functions in `/workspace/src/game/engine.js`
@@ -80,7 +82,7 @@ This document summarizes the backend implementation for the new character "Inuzu
 - **Cost**: 2 Random chakra
 - **Effects**: 
   - Applies `persistent_aoe_damage` status (10 damage/turn for 3 turns)
-  - Applies `cost_reduction` status for Garouga (-1 Random chakra for 3 turns)
+  - Applies `cost_reduction` status for Garouga (reduces Random chakra cost by 1 for 3 turns)
 - **Cooldown**: 4 turns
 
 #### 3. Garouga
@@ -97,6 +99,9 @@ This document summarizes the backend implementation for the new character "Inuzu
 
 1. **persistent_aoe_damage**: Deals damage to all enemies at end of turn
 2. **cost_reduction**: Reduces chakra cost of specified skill
+   - `cost_change` field contains an object with chakra types and reduction amounts
+   - Example: `{"Random": -1}` reduces Random chakra cost by 1
+   - Costs cannot be reduced below 0
 3. **dynamic_air_mark**: Prevents defensive buffs and marks for targeting restriction
 
 ## Files Modified

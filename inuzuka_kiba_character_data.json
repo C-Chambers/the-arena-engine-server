@@ -48,7 +48,9 @@
           "status": "cost_reduction",
           "duration": 3,
           "skillId": "ID_OF_GAROUGA",
-          "cost_change": -1,
+          "cost_change": {
+            "Random": -1
+          },
           "description": "Reduces Garouga cost by 1 Random chakra"
         }
       ],

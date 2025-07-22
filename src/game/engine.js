@@ -87,11 +87,14 @@ class Game {
         
         if (caster) {
             const costReductionStatus = caster.statuses.find(s => s.status === 'cost_reduction');
-            if (costReductionStatus) {
-                // Apply cost reduction - reduce random cost by the specified amount
-                const reductionAmount = costReductionStatus.cost_change || 0;
-                if (modifiedCost['Random'] && reductionAmount < 0) {
-                    modifiedCost['Random'] = Math.max(0, modifiedCost['Random'] + reductionAmount);
+            if (costReductionStatus && costReductionStatus.cost_change) {
+                // Apply cost reduction - cost_change contains the chakra type and reduction amount
+                for (const chakraType in costReductionStatus.cost_change) {
+                    const reductionAmount = costReductionStatus.cost_change[chakraType];
+                    if (modifiedCost[chakraType] && reductionAmount < 0) {
+                        // Reduce cost but not below 0
+                        modifiedCost[chakraType] = Math.max(0, modifiedCost[chakraType] + reductionAmount);
+                    }
                 }
             }
         }
@@ -154,10 +157,14 @@ class Game {
         const caster = player.team.find(c => c.instanceId === action.casterId);
         if (caster) {
             const costReductionStatus = caster.statuses.find(s => s.status === 'cost_reduction');
-            if (costReductionStatus && costReductionStatus.skillId === action.skill.id) {
-                const reductionAmount = costReductionStatus.cost_change || 0;
-                if (modifiedCost['Random'] && reductionAmount < 0) {
-                    modifiedCost['Random'] = Math.max(0, modifiedCost['Random'] + reductionAmount);
+            if (costReductionStatus && costReductionStatus.skillId === action.skill.id && costReductionStatus.cost_change) {
+                // Apply cost reduction - cost_change contains the chakra type and reduction amount
+                for (const chakraType in costReductionStatus.cost_change) {
+                    const reductionAmount = costReductionStatus.cost_change[chakraType];
+                    if (modifiedCost[chakraType] && reductionAmount < 0) {
+                        // Reduce cost but not below 0
+                        modifiedCost[chakraType] = Math.max(0, modifiedCost[chakraType] + reductionAmount);
+                    }
                 }
             }
         }
