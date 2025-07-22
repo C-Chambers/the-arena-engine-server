@@ -47,6 +47,17 @@ class Game {
       }
     }
     
+    // Check for targeting restriction (Dynamic Air Marking)
+    if (skill.name === 'Dynamic Air Marking') {
+      const targetPlayer = Object.values(this.players).find(p => p.team.some(c => c.instanceId === action.targetId));
+      if (targetPlayer) {
+        const target = targetPlayer.team.find(c => c.instanceId === action.targetId);
+        if (target && target.statuses.some(s => s.status === 'dynamic_air_mark')) {
+          return { success: false, message: `${target.name} is already affected by Dynamic Air Marking!` };
+        }
+      }
+    }
+    
     if (player.actionQueue.some(a => a.casterId === action.casterId)) {
         return { success: false, message: `${caster.name} has already queued a skill this turn.` };
     }
@@ -57,7 +68,7 @@ class Game {
         newTotalCost[type] = (newTotalCost[type] || 0) + skill.cost[type];
     }
     
-    if (!this.canAffordCost(player.chakra, newTotalCost)) {
+    if (!this.canAffordCost(player.chakra, newTotalCost, action.casterId)) {
         return { success: false, message: `Not enough chakra.` };
     }
 
@@ -65,19 +76,40 @@ class Game {
     return { success: true };
   }
   
-  canAffordCost(availableChakra, totalCost) {
+  canAffordCost(availableChakra, totalCost, casterId = null) {
     const tempChakra = { ...availableChakra };
+    let modifiedCost = { ...totalCost };
     
-    for (const type in totalCost) {
-        if (type !== 'Random') {
-            if (!tempChakra[type] || tempChakra[type] < totalCost[type]) {
-                return false; 
+    // Check for cost reduction status if casterId is provided
+    if (casterId) {
+        const player = this.players[this.activePlayerId];
+        const caster = player.team.find(c => c.instanceId === casterId);
+        
+        if (caster) {
+            const costReductionStatus = caster.statuses.find(s => s.status === 'cost_reduction');
+            if (costReductionStatus && costReductionStatus.cost_change) {
+                // Apply cost reduction - cost_change contains the chakra type and reduction amount
+                for (const chakraType in costReductionStatus.cost_change) {
+                    const reductionAmount = costReductionStatus.cost_change[chakraType];
+                    if (modifiedCost[chakraType] && reductionAmount < 0) {
+                        // Reduce cost but not below 0
+                        modifiedCost[chakraType] = Math.max(0, modifiedCost[chakraType] + reductionAmount);
+                    }
+                }
             }
-            tempChakra[type] -= totalCost[type];
         }
     }
     
-    const randomCost = totalCost['Random'] || 0;
+    for (const type in modifiedCost) {
+        if (type !== 'Random') {
+            if (!tempChakra[type] || tempChakra[type] < modifiedCost[type]) {
+                return false; 
+            }
+            tempChakra[type] -= modifiedCost[type];
+        }
+    }
+    
+    const randomCost = modifiedCost['Random'] || 0;
     if (randomCost > 0) {
         const remainingChakraCount = Object.values(tempChakra).reduce((sum, count) => sum + count, 0);
         if (remainingChakraCount < randomCost) {
@@ -117,20 +149,39 @@ class Game {
 
   executeTurn() {
     const player = this.players[this.activePlayerId];
-    const finalCost = this.calculateQueueCost(player.actionQueue);
+    let finalCost = this.calculateQueueCost(player.actionQueue);
     
-    if (!this.canAffordCost(player.chakra, finalCost)) {
+    // Apply cost reduction from all casters in the queue
+    const modifiedCost = { ...finalCost };
+    player.actionQueue.forEach(action => {
+        const caster = player.team.find(c => c.instanceId === action.casterId);
+        if (caster) {
+            const costReductionStatus = caster.statuses.find(s => s.status === 'cost_reduction');
+            if (costReductionStatus && costReductionStatus.skillId === action.skill.id && costReductionStatus.cost_change) {
+                // Apply cost reduction - cost_change contains the chakra type and reduction amount
+                for (const chakraType in costReductionStatus.cost_change) {
+                    const reductionAmount = costReductionStatus.cost_change[chakraType];
+                    if (modifiedCost[chakraType] && reductionAmount < 0) {
+                        // Reduce cost but not below 0
+                        modifiedCost[chakraType] = Math.max(0, modifiedCost[chakraType] + reductionAmount);
+                    }
+                }
+            }
+        }
+    });
+    
+    if (!this.canAffordCost(player.chakra, modifiedCost)) {
         this.log.push(`Execution failed: Not enough chakra.`);
         return this.getGameState();
     }
 
-    for (const type in finalCost) {
+    for (const type in modifiedCost) {
         if (type !== 'Random') {
-            player.chakra[type] -= finalCost[type];
+            player.chakra[type] -= modifiedCost[type];
         }
     }
 
-    let randomCostToPay = finalCost['Random'] || 0;
+    let randomCostToPay = modifiedCost['Random'] || 0;
     if (randomCostToPay > 0) {
         let sortedChakra = Object.entries(player.chakra)
             .filter(([, count]) => count > 0)
@@ -212,6 +263,15 @@ class Game {
         const isDamagingOrHealing = effect.type === 'damage' || effect.type === 'heal';
         if (isImmune && !isDamagingOrHealing) {
             this.log.push(`${target.name} is immune to the non-damaging effects of ${skill.name}!`);
+            return;
+        }
+
+        // --- NEW: Dynamic Air Mark Buff Immunity Check ---
+        const hasDynamicAirMark = target.statuses.some(s => s.status === 'dynamic_air_mark');
+        const isDefensiveEffect = effect.type === 'add_shield' || (effect.type === 'apply_status' && 
+            (effect.status === 'damage_reduction' || effect.status === 'invulnerable'));
+        if (hasDynamicAirMark && isDefensiveEffect) {
+            this.log.push(`${target.name} is marked by Dynamic Air Marking and cannot receive defensive benefits!`);
             return;
         }
 
@@ -329,6 +389,75 @@ class Game {
   }
 
   processTurnBasedEffects(player) {
+    // First, check for persistent AoE damage effects
+    const casterInstanceIds = [];
+    player.team.forEach(char => {
+        if (!char.isAlive) return;
+        const persistentAoEStatus = char.statuses.find(s => s.status === 'persistent_aoe_damage');
+        if (persistentAoEStatus) {
+            casterInstanceIds.push(char.instanceId);
+        }
+    });
+
+    // Apply persistent AoE damage to all living enemies
+    if (casterInstanceIds.length > 0) {
+        const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+        const enemyTeam = this.players[opponentId].team.filter(c => c.isAlive);
+        
+        casterInstanceIds.forEach(casterInstanceId => {
+            const caster = player.team.find(c => c.instanceId === casterInstanceId);
+            const persistentAoEStatus = caster.statuses.find(s => s.status === 'persistent_aoe_damage');
+            
+            if (persistentAoEStatus) {
+                this.log.push(`${caster.name}'s persistent AoE effect deals damage to all enemies!`);
+                
+                enemyTeam.forEach(enemy => {
+                    let damage = persistentAoEStatus.damage || 0;
+                    
+                    // Apply damage reduction if enemy has it
+                    const reductionStatuses = enemy.statuses.filter(s => s.status === 'damage_reduction');
+                    if (reductionStatuses.length > 0) {
+                        const flatReduction = reductionStatuses
+                            .filter(s => !s.reduction_type || s.reduction_type === 'flat')
+                            .reduce((sum, status) => sum + status.value, 0);
+                        damage = Math.max(0, damage - flatReduction);
+                        
+                        const percentageReductionStatuses = reductionStatuses.filter(s => s.reduction_type === 'percentage');
+                        if (percentageReductionStatuses.length > 0) {
+                            const totalPercentageReduction = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
+                            const damageReduced = Math.round(damage * totalPercentageReduction);
+                            damage = Math.max(0, damage - damageReduced);
+                        }
+                    }
+                    
+                    // Apply shield protection
+                    const shield = enemy.statuses.find(s => s.status === 'shield');
+                    if (shield) {
+                        if (shield.value >= damage) {
+                            shield.value -= damage;
+                            damage = 0;
+                        } else {
+                            damage -= shield.value;
+                            enemy.statuses = enemy.statuses.filter(s => s.status !== 'shield');
+                        }
+                    }
+                    
+                    if (damage > 0) {
+                        enemy.currentHp -= damage;
+                        this.log.push(`${enemy.name} took ${damage} damage from persistent AoE!`);
+                        
+                        if (enemy.currentHp <= 0) {
+                            enemy.isAlive = false;
+                            enemy.currentHp = 0;
+                            this.log.push(`${enemy.name} has been defeated by persistent AoE damage!`);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Process regular status effects
     player.team.forEach(char => {
         if (!char.isAlive) return;
         const newStatuses = [];
