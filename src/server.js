@@ -9,8 +9,9 @@ const statusRoutes = require('./routes/status.js');
 const characterRoutes = require('./routes/characters.js'); 
 const teamRoutes = require('./routes/team.js');
 const missionRoutes = require('./routes/missions.js');
-const adminRoutes = require('./routes/admin.js'); // Import our new admin routes
-const ratingRoutes = require('./routes/ratings.js'); // Import the missing rating routes
+const adminRoutes = require('./routes/admin.js');
+const ratingRoutes = require('./routes/ratings.js');
+const rosterRoutes = require('./routes/roster.js'); // Import our new roster routes
 const gameManager = require('./game/manager.js');
 const { loadAllGameData } = require('./services/characterService');
 
@@ -29,8 +30,9 @@ async function startServer() {
   app.use('/api/characters', characterRoutes);
   app.use('/api/team', teamRoutes);
   app.use('/api/missions', missionRoutes);
-  app.use('/api/admin', adminRoutes); // Use the admin routes
-  app.use('/api/ratings', ratingRoutes); // Use the rating routes
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/ratings', ratingRoutes);
+  app.use('/api/roster', rosterRoutes); // Use the new roster routes
   app.use('/status', statusRoutes(gameManager));
 
   app.get('/', (req, res) => {
@@ -45,7 +47,7 @@ async function startServer() {
 }
 
 function setupWebSockets(server) {
-  // ... WebSocket setup code remains the same
+  // ... WebSocket setup code remains the same ...
   const statusClients = new Set();
   gameManager.setStatusUpdateCallback(() => {
     statusClients.forEach(client => {
