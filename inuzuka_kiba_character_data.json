@@ -1,0 +1,106 @@
+{
+  "character": {
+    "name": "Inuzuka Kiba, the Beast Tamer",
+    "max_hp": 100,
+    "image_url": "https://example.com/characters/inuzuka_kiba.jpg"
+  },
+  "skills": [
+    {
+      "name": "Dynamic Air Marking",
+      "description": "Kiba marks an enemy with his scent, preventing them from reducing damage or becoming invulnerable for 3 turns.",
+      "cost": {
+        "Random": 1
+      },
+      "effects": [
+        {
+          "type": "apply_status",
+          "target": "enemy",
+          "status": "dynamic_air_mark",
+          "duration": 3,
+          "description": "Prevents target from reducing damage or becoming invulnerable"
+        }
+      ],
+      "cooldown": 0,
+      "skill_class": "Mental",
+      "skill_range": "Single",
+      "skill_persistence": "Instant",
+      "icon_url": "https://example.com/skills/dynamic_air_marking.jpg",
+      "is_locked_by_default": false
+    },
+    {
+      "name": "Double Headed Wolf",
+      "description": "Kiba gains persistent AoE damage for 3 turns and makes Garouga cost less chakra.",
+      "cost": {
+        "Random": 2
+      },
+      "effects": [
+        {
+          "type": "apply_status",
+          "target": "self",
+          "status": "persistent_aoe_damage",
+          "duration": 3,
+          "damage": 10,
+          "description": "Deals damage to all enemies at end of turn"
+        },
+        {
+          "type": "apply_status",
+          "target": "self",
+          "status": "cost_reduction",
+          "duration": 3,
+          "skillId": "ID_OF_GAROUGA",
+          "cost_change": -1,
+          "description": "Reduces Garouga cost by 1 Random chakra"
+        }
+      ],
+      "cooldown": 4,
+      "skill_class": "Mental",
+      "skill_range": "Self",
+      "skill_persistence": "Control",
+      "icon_url": "https://example.com/skills/double_headed_wolf.jpg",
+      "is_locked_by_default": false
+    },
+    {
+      "name": "Garouga",
+      "description": "Kiba deals damage to one enemy. If Kiba has cost reduction for this skill, it deals bonus damage.",
+      "cost": {
+        "Random": 1
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 25,
+          "description": "Base damage to target"
+        }
+      ],
+      "cooldown": 0,
+      "skill_class": "Physical",
+      "skill_range": "Single",
+      "skill_persistence": "Instant",
+      "icon_url": "https://example.com/skills/garouga.jpg",
+      "is_locked_by_default": false
+    },
+    {
+      "name": "Smoke Bomb",
+      "description": "Kiba becomes invulnerable for 1 turn.",
+      "cost": {
+        "Random": 1
+      },
+      "effects": [
+        {
+          "type": "apply_status",
+          "target": "self",
+          "status": "invulnerable",
+          "duration": 1,
+          "description": "Cannot be affected by enemy skills"
+        }
+      ],
+      "cooldown": 4,
+      "skill_class": "Mental",
+      "skill_range": "Self",
+      "skill_persistence": "Control",
+      "icon_url": "https://example.com/skills/smoke_bomb.jpg",
+      "is_locked_by_default": false
+    }
+  ]
+}
