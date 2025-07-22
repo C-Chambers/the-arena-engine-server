@@ -235,17 +235,22 @@ class Game {
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
 
-            // --- NEW: Conditional Damage for Sharingan Mark ---
+            // --- UPDATED: Conditional Damage for Sharingan Mark (Step 1.3) ---
             const sharinganMark = target.statuses.find(s => s.status === 'sharingan_mark' && s.casterInstanceId === casterId);
-            if (sharinganMark && effect.bonus_if_marked) {
-                damageToDeal += effect.bonus_if_marked;
-                this.log.push(`${target.name} is marked by ${casterChar.name}'s Sharingan, taking bonus damage!`);
+            if (sharinganMark) {
+                // Check if this is a "Chidori" or "Lion Combo" skill that should get bonus damage
+                const isTargetedSkill = skill.name === 'Chidori' || skill.name === 'Lion Combo';
+                if (isTargetedSkill) {
+                    const bonusDamage = 15; // Fixed 15 bonus damage as per plan
+                    damageToDeal += bonusDamage;
+                    this.log.push(`${target.name} is marked by ${casterChar.name}'s Sharingan! ${skill.name} deals ${bonusDamage} bonus damage!`);
+                }
             }
 
             const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
-            // --- UPDATED: Damage Reduction Logic ---
+            // --- UPDATED: Damage Reduction Logic (Step 1.2) ---
             const reductionStatuses = target.statuses.filter(s => s.status === 'damage_reduction');
             if (reductionStatuses.length > 0) {
                 // First, apply flat reduction
@@ -255,13 +260,14 @@ class Game {
                 damageToDeal = Math.max(0, damageToDeal - flatReduction);
                 if (flatReduction > 0) this.log.push(`${target.name}'s damage reduction lowered damage by ${flatReduction}.`);
                 
-                // Then, apply percentage reduction to the remaining damage
+                // Then, apply percentage reduction to the remaining damage (Step 1.2)
                 const percentageReductionStatuses = reductionStatuses.filter(s => s.reduction_type === 'percentage');
                 if (percentageReductionStatuses.length > 0) {
-                    const totalPercentage = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
-                    const damageReduced = Math.round(damageToDeal * totalPercentage);
-                    damageToDeal -= damageReduced;
-                    this.log.push(`${target.name}'s damage reduction lowered damage by an additional ${totalPercentage * 100}%.`);
+                    const totalPercentageReduction = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
+                    // Apply percentage reduction (value like 0.25 means 25% reduction)
+                    const damageReduced = Math.round(damageToDeal * totalPercentageReduction);
+                    damageToDeal = Math.max(0, damageToDeal - damageReduced);
+                    this.log.push(`${target.name}'s percentage damage reduction lowered damage by ${Math.round(totalPercentageReduction * 100)}%.`);
                 }
             }
             
