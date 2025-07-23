@@ -12,6 +12,7 @@ const missionRoutes = require('./routes/missions.js');
 const adminRoutes = require('./routes/admin.js');
 const ratingRoutes = require('./routes/ratings.js');
 const rosterRoutes = require('./routes/roster.js'); // Import our new roster routes
+const analyticsRoutes = require('./routes/analytics.js'); // Import analytics routes
 const gameManager = require('./game/manager.js');
 const { loadAllGameData } = require('./services/characterService');
 
@@ -33,6 +34,7 @@ async function startServer() {
   app.use('/api/admin', adminRoutes);
   app.use('/api/ratings', ratingRoutes);
   app.use('/api/roster', rosterRoutes); // Use the new roster routes
+  app.use('/api/analytics', analyticsRoutes); // Use the analytics routes
   app.use('/status', statusRoutes(gameManager));
 
   app.get('/', (req, res) => {

@@ -4,25 +4,72 @@ const Game = require('./engine');
 const { pool } = require('../config/database');
 const { getCharacters } = require('../services/characterService');
 const { v4: uuidv4 } = require('uuid');
+const MatchmakingAnalytics = require('../services/matchmakingAnalytics');
 
-const MATCHMAKING_TICK_RATE = 1000; // 5 seconds
+const MATCHMAKING_TICK_RATE = 1000; // Default tick rate
 const INITIAL_MMR_RANGE = 100;
 const MMR_RANGE_INCREASE_PER_TICK = 50;
 const NEW_PLAYER_GAME_THRESHOLD = 20; // Players with fewer games are considered "new"
+
+// Phase 1: Wait time priority constants
+const PRIORITY_WAIT_THRESHOLD = 30000; // 30 seconds
+const MAX_NEW_PLAYER_WAIT = 120000; // 2 minutes
+
+// Phase 1: Dynamic tick rate configuration
+const DYNAMIC_TICK_CONFIG = {
+    highTraffic: { threshold: 10, tickRate: 2000 },    // 2 seconds when 10+ players
+    normalTraffic: { threshold: 4, tickRate: 1000 },   // 1 second when 4-9 players
+    lowTraffic: { threshold: 0, tickRate: 500 }        // 0.5 seconds when <4 players
+};
 
 class GameManager {
   constructor() {
     this.games = new Map();
     // --- NEW: Separate queues for new and veteran players ---
-    this.newPlayerQueue = [];
+    this.newPlayerQueue = []; // Will store objects with {player, timeEntered, priority}
     this.veteranQueue = [];
     this.onStatusUpdate = () => {}; 
     
-    setInterval(() => this.matchmakingTick(), MATCHMAKING_TICK_RATE); 
+    // Phase 1: Analytics and dynamic tick rate
+    this.analytics = new MatchmakingAnalytics();
+    this.currentTickRate = MATCHMAKING_TICK_RATE;
+    this.matchmakingInterval = null;
+    
+    this.startMatchmaking();
   }
 
   setStatusUpdateCallback(callback) {
     this.onStatusUpdate = callback;
+  }
+
+  // Phase 1: Dynamic tick rate methods
+  calculateOptimalTickRate() {
+    const totalPlayers = this.newPlayerQueue.length + this.veteranQueue.length;
+    
+    if (totalPlayers >= DYNAMIC_TICK_CONFIG.highTraffic.threshold) {
+        return DYNAMIC_TICK_CONFIG.highTraffic.tickRate;
+    } else if (totalPlayers >= DYNAMIC_TICK_CONFIG.normalTraffic.threshold) {
+        return DYNAMIC_TICK_CONFIG.normalTraffic.tickRate;
+    } else {
+        return DYNAMIC_TICK_CONFIG.lowTraffic.tickRate;
+    }
+  }
+
+  startMatchmaking() {
+    if (this.matchmakingInterval) {
+        clearInterval(this.matchmakingInterval);
+    }
+    this.matchmakingInterval = setInterval(() => this.matchmakingTick(), this.currentTickRate);
+  }
+
+  updateTickRate() {
+    const newTickRate = this.calculateOptimalTickRate();
+    if (newTickRate !== this.currentTickRate) {
+        this.currentTickRate = newTickRate;
+        this.analytics.updateTickRate(newTickRate);
+        this.startMatchmaking();
+        console.log(`Matchmaking tick rate updated to ${newTickRate}ms`);
+    }
   }
   
   async getTeamForPlayer(playerId) {
@@ -46,14 +93,50 @@ class GameManager {
     return Game.createRandomTeam();
   }
 
+  // Phase 1: Priority-based new player queue methods
+  addToNewPlayerQueue(ws, gamesPlayed = 0) {
+    this.newPlayerQueue.push({
+        player: ws,
+        timeEntered: Date.now(),
+        priority: 0,
+        gamesPlayed: gamesPlayed
+    });
+  }
+
+  processNewPlayerQueue() {
+    if (this.newPlayerQueue.length >= 2) {
+        // Sort by priority (wait time), then by entry time
+        this.newPlayerQueue.sort((a, b) => {
+            const timeA = Date.now() - a.timeEntered;
+            const timeB = Date.now() - b.timeEntered;
+            
+            // Prioritize players who have waited longer than threshold
+            if (timeA > PRIORITY_WAIT_THRESHOLD && timeB <= PRIORITY_WAIT_THRESHOLD) return -1;
+            if (timeB > PRIORITY_WAIT_THRESHOLD && timeA <= PRIORITY_WAIT_THRESHOLD) return 1;
+            
+            // Otherwise, first come first served
+            return a.timeEntered - b.timeEntered;
+        });
+        
+        const player1Data = this.newPlayerQueue.shift();
+        const player2Data = this.newPlayerQueue.shift();
+        
+        return this.createGame(player1Data.player, player2Data.player, player1Data, player2Data);
+    }
+    return Promise.resolve(false);
+  }
+
   async matchmakingTick() {
-    // Process the new player queue first
+    // Update analytics with current queue population
+    this.analytics.updateQueuePopulation(this.newPlayerQueue.length, this.veteranQueue.length);
+    
+    // Update tick rate based on current population
+    this.updateTickRate();
+    
+    // Process the new player queue first with priority system
     if (this.newPlayerQueue.length >= 2) {
       console.log(`Matchmaking tick: Processing new player queue (${this.newPlayerQueue.length} players).`);
-      // For new players, we can use a simpler "first two" logic for faster matches
-      const player1_ws = this.newPlayerQueue.shift();
-      const player2_ws = this.newPlayerQueue.shift();
-      await this.createGame(player1_ws, player2_ws);
+      await this.processNewPlayerQueue();
     }
     
     // Process the veteran player queue
@@ -104,43 +187,87 @@ class GameManager {
     this.veteranQueue = this.veteranQueue.filter(p => !matchedPlayerIds.has(p.id));
   }
 
-  async createGame(player1_ws, player2_ws) {
-    const [player1Team, player2Team] = await Promise.all([
-      this.getTeamForPlayer(player1_ws.id),
-      this.getTeamForPlayer(player2_ws.id)
-    ]);
-    const player1 = { id: player1_ws.id, email: player1_ws.email, ws: player1_ws, team: player1Team };
-    const player2 = { id: player2_ws.id, email: player2_ws.email, ws: player2_ws, team: player2Team };
-    const newGame = new Game(player1, player2);
-    this.games.set(newGame.gameId, newGame);
-    player1.ws.gameId = newGame.gameId;
-    player2.ws.gameId = newGame.gameId;
-    const initialState = newGame.startGame();
-    player1.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player1.id, state: initialState }));
-    player2.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player2.id, state: initialState }));
-    this.onStatusUpdate('game-started');
+  async createGame(player1_ws, player2_ws, player1Data = null, player2Data = null) {
+    try {
+      // Calculate wait times for analytics
+      const now = Date.now();
+      const player1WaitTime = player1Data ? (now - player1Data.timeEntered) : 0;
+      const player2WaitTime = player2Data ? (now - player2Data.timeEntered) : 0;
+      
+      const [player1Team, player2Team] = await Promise.all([
+        this.getTeamForPlayer(player1_ws.id),
+        this.getTeamForPlayer(player2_ws.id)
+      ]);
+      
+      const player1 = { id: player1_ws.id, email: player1_ws.email, ws: player1_ws, team: player1Team };
+      const player2 = { id: player2_ws.id, email: player2_ws.email, ws: player2_ws, team: player2Team };
+      const newGame = new Game(player1, player2);
+      
+      this.games.set(newGame.gameId, newGame);
+      player1.ws.gameId = newGame.gameId;
+      player2.ws.gameId = newGame.gameId;
+      
+      const initialState = newGame.startGame();
+      
+      player1.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player1.id, state: initialState }));
+      player2.ws.send(JSON.stringify({ type: 'GAME_START', yourId: player2.id, state: initialState }));
+      
+      // Record successful match in analytics
+      this.analytics.recordMatch(player1WaitTime, player2WaitTime, true, false);
+      
+      this.onStatusUpdate('game-started');
+      
+      console.log(`Game created successfully: ${newGame.gameId}, Wait times: P1=${(player1WaitTime/1000).toFixed(1)}s, P2=${(player2WaitTime/1000).toFixed(1)}s`);
+      
+    } catch (error) {
+      console.error('Error creating game:', error);
+      
+      // Record failed match in analytics
+      this.analytics.recordMatch(0, 0, false, false);
+      
+      // Send error to players
+      player1_ws.send(JSON.stringify({ type: 'MATCHMAKING_ERROR', message: 'Failed to create game' }));
+      player2_ws.send(JSON.stringify({ type: 'MATCHMAKING_ERROR', message: 'Failed to create game' }));
+    }
   }
 
   async handleNewPlayer(ws, user) {
-    if (this.newPlayerQueue.some(p => p.id === user.id) || this.veteranQueue.some(p => p.id === user.id) || Array.from(this.games.values()).some(g => g.players[user.id])) {
+    // Check if player is already in queue or game
+    const inNewQueue = this.newPlayerQueue.some(p => p.player.id === user.id);
+    const inVeteranQueue = this.veteranQueue.some(p => p.id === user.id);
+    const inGame = Array.from(this.games.values()).some(g => g.players[user.id]);
+    
+    if (inNewQueue || inVeteranQueue || inGame) {
       console.log(`Player ${user.id} is already in queue or in a game.`);
       return;
     }
+    
     const ratingsQuery = `SELECT games_played FROM arena_engine_schema.player_ratings WHERE user_id = $1`;
     const { rows } = await pool.query(ratingsQuery, [user.id]);
     const gamesPlayed = rows.length > 0 ? rows[0].games_played : 0;
+    
     ws.id = user.id;
     ws.email = user.email;
     ws.timeEnteredQueue = Date.now();
 
     if (gamesPlayed < NEW_PLAYER_GAME_THRESHOLD) {
-        this.newPlayerQueue.push(ws);
-        console.log(`Player ${user.id} added to NEW PLAYER queue.`);
-        ws.send(JSON.stringify({ type: 'STATUS', message: `In new player queue...` }));
+        this.addToNewPlayerQueue(ws, gamesPlayed);
+        console.log(`Player ${user.id} added to NEW PLAYER queue (${gamesPlayed} games played).`);
+        ws.send(JSON.stringify({ 
+          type: 'STATUS', 
+          message: `In new player queue...`,
+          queueType: 'new',
+          gamesPlayed: gamesPlayed
+        }));
     } else {
         this.veteranQueue.push(ws);
-        console.log(`Player ${user.id} added to VETERAN queue.`);
-        ws.send(JSON.stringify({ type: 'STATUS', message: `In veteran queue...` }));
+        console.log(`Player ${user.id} added to VETERAN queue (${gamesPlayed} games played).`);
+        ws.send(JSON.stringify({ 
+          type: 'STATUS', 
+          message: `In veteran queue...`,
+          queueType: 'veteran',
+          gamesPlayed: gamesPlayed
+        }));
     }
     
     this.onStatusUpdate('player-joined-queue');
@@ -196,26 +323,51 @@ class GameManager {
 
   broadcastQueueStatus() {
       const now = Date.now();
-      [...this.newPlayerQueue, ...this.veteranQueue].forEach(ws => {
+      
+      // Handle new player queue (object structure)
+      this.newPlayerQueue.forEach(playerData => {
+        const timeInQueue = Math.floor((now - playerData.timeEntered) / 1000);
+        const isPriority = (now - playerData.timeEntered) > PRIORITY_WAIT_THRESHOLD;
+        
+        playerData.player.send(JSON.stringify({
+          type: 'STATUS',
+          queue: 'new',
+          timeInQueue,
+          priority: isPriority,
+          queuePosition: this.newPlayerQueue.indexOf(playerData) + 1,
+          totalInQueue: this.newPlayerQueue.length
+        }));
+      });
+      
+      // Handle veteran queue (original structure)
+      this.veteranQueue.forEach(ws => {
         const timeInQueue = Math.floor((now - ws.timeEnteredQueue) / 1000);
         ws.send(JSON.stringify({
           type: 'STATUS',
-          queue: this.newPlayerQueue.includes(ws) ? 'new' : 'veteran',
-          timeInQueue
+          queue: 'veteran',
+          timeInQueue,
+          queuePosition: this.veteranQueue.indexOf(ws) + 1,
+          totalInQueue: this.veteranQueue.length
         }));
       });
   }
 
   handleDisconnect(ws) {
-    let queueIndex = this.newPlayerQueue.findIndex(p => p.id === ws.id);
+    // Remove from new player queue (object structure)
+    let queueIndex = this.newPlayerQueue.findIndex(p => p.player.id === ws.id);
     if (queueIndex > -1) {
         this.newPlayerQueue.splice(queueIndex, 1);
+        console.log(`Player ${ws.id} removed from new player queue on disconnect`);
     } else {
+        // Remove from veteran queue (original structure)
         queueIndex = this.veteranQueue.findIndex(p => p.id === ws.id);
         if (queueIndex > -1) {
             this.veteranQueue.splice(queueIndex, 1);
+            console.log(`Player ${ws.id} removed from veteran queue on disconnect`);
         }
     }
+    
+    // Handle game disconnection
     if (ws.gameId) {
       const game = this.games.get(ws.gameId);
       if (game) {
@@ -228,8 +380,29 @@ class GameManager {
         }
         this.games.delete(ws.gameId);
         this.onStatusUpdate('game-ended');
+        console.log(`Game ${ws.gameId} ended due to player ${ws.id} disconnect`);
       }
     }
+  }
+
+  // Phase 1: Cleanup method for graceful shutdown
+  destroy() {
+    if (this.matchmakingInterval) {
+      clearInterval(this.matchmakingInterval);
+      this.matchmakingInterval = null;
+    }
+    
+    if (this.analytics) {
+      this.analytics.destroy();
+      this.analytics = null;
+    }
+    
+    console.log('GameManager destroyed');
+  }
+
+  // Phase 1: Get analytics data for monitoring
+  getAnalytics() {
+    return this.analytics ? this.analytics.getMetrics() : null;
   }
 }
 
