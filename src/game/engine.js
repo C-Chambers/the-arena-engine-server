@@ -108,7 +108,7 @@ class Game {
     }
     
     if (skill.is_locked_by_default) {
-      const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId === skill.id);
+      const isEnabled = caster.statuses.some(s => s.status === 'enable_skill' && s.skillId == skill.id);
       if (!isEnabled) {
         return { success: false, message: `${skill.name} is not currently enabled.` };
       }
@@ -224,7 +224,7 @@ class Game {
         const caster = player.team.find(c => c.instanceId === action.casterId);
         if (caster) {
             const costReductionStatus = caster.statuses.find(s => s.status === 'cost_reduction');
-            if (costReductionStatus && costReductionStatus.skillId === action.skill.id && costReductionStatus.cost_change) {
+            if (costReductionStatus && costReductionStatus.skillId == action.skill.id && costReductionStatus.cost_change) {
                 // Apply cost reduction - cost_change contains the chakra type and reduction amount
                 for (const chakraType in costReductionStatus.cost_change) {
                     const reductionAmount = costReductionStatus.cost_change[chakraType];
@@ -393,7 +393,7 @@ class Game {
             let damageToDeal = effect.value;
 
             // --- NEW: Empower Skill Logic ---
-            const empowerStatus = casterChar.statuses.find(s => s.status === 'empower_skill' && s.skillId === skill.id);
+            const empowerStatus = casterChar.statuses.find(s => s.status === 'empower_skill' && s.skillId == skill.id);
             if (empowerStatus) {
                 damageToDeal += empowerStatus.damageBonus;
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
