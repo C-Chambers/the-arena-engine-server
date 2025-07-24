@@ -317,17 +317,46 @@ class Game {
     skill.effects.forEach(effect => {
       let targets = [];
       const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+      const currentPlayer = this.players[this.activePlayerId];
       
-      if(effect.target === 'all_enemies') {
-        targets = this.players[opponentId].team.filter(c => c.isAlive);
-      } else {
-        targetIds.forEach(targetId => {
+      // Determine targets based on effect.target
+      switch(effect.target) {
+        case 'self':
+          targets = [casterChar];
+          break;
+        case 'all_enemies':
+          targets = this.players[opponentId].team.filter(c => c.isAlive);
+          break;
+        case 'all_allies':
+          targets = currentPlayer.team.filter(c => c.isAlive);
+          break;
+        case 'ally':
+        case 'enemy':
+        default:
+          // For ally/enemy/default targeting, use the provided targetIds
+          targetIds.forEach(targetId => {
             const playerToTarget = Object.values(this.players).find(p => p.team.some(c => c.instanceId === targetId));
             if(playerToTarget) {
-                const target = playerToTarget.team.find(c => c.instanceId === targetId);
-                if (target) targets.push(target);
+              const target = playerToTarget.team.find(c => c.instanceId === targetId);
+              if (target) {
+                // Validate target is appropriate for the effect
+                const isAlly = playerToTarget.id === this.activePlayerId;
+                const isEnemy = playerToTarget.id !== this.activePlayerId;
+                
+                if (effect.target === 'ally' && !isAlly) {
+                  this.log.push(`Warning: ${skill.name} effect targets ally but ${target.name} is not an ally.`);
+                  return;
+                }
+                if (effect.target === 'enemy' && !isEnemy) {
+                  this.log.push(`Warning: ${skill.name} effect targets enemy but ${target.name} is not an enemy.`);
+                  return;
+                }
+                
+                targets.push(target);
+              }
             }
-        });
+          });
+          break;
       }
 
       targets.forEach(target => {
