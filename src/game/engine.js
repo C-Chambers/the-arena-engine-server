@@ -340,8 +340,8 @@ class Game {
               const target = playerToTarget.team.find(c => c.instanceId === targetId);
               if (target) {
                 // Validate target is appropriate for the effect
-                const isAlly = playerToTarget.id === this.activePlayerId;
-                const isEnemy = playerToTarget.id !== this.activePlayerId;
+                const isAlly = playerToTarget.id === String(this.activePlayerId);
+                const isEnemy = playerToTarget.id !== String(this.activePlayerId);
                 
                 if (effect.target === 'ally' && !isAlly) {
                   this.log.push(`Warning: ${skill.name} effect targets ally but ${target.name} is not an ally.`);
