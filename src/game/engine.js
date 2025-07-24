@@ -781,16 +781,6 @@ class Game {
         this.generateChakra();
     }
     
-    // DEBUG: Log character statuses being sent to client
-    Object.values(this.players).forEach(player => {
-      player.team.forEach(char => {
-        const invulnerableStatus = char.statuses.find(s => s.status === 'invulnerable');
-        if (invulnerableStatus) {
-          console.log(`DEBUG: Sending invulnerable status for ${char.name}:`, JSON.stringify(invulnerableStatus, null, 2));
-        }
-      });
-    });
-    
     return {
       gameId: this.gameId,
       turn: this.turn,
