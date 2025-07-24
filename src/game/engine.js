@@ -370,6 +370,18 @@ class Game {
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
 
+            // --- NEW: Outgoing Damage Reduction (Female Bug marking effect) ---
+            const outgoingReductionStatuses = casterChar.statuses.filter(s => s.status === 'outgoing_damage_reduction');
+            if (outgoingReductionStatuses.length > 0 && effect.damage_type !== 'affliction') {
+              const flatReduction = outgoingReductionStatuses
+                .filter(s => !s.reduction_type || s.reduction_type === 'flat')
+                .reduce((sum, status) => sum + status.value, 0);
+              if (flatReduction > 0) {
+                damageToDeal = Math.max(0, damageToDeal - flatReduction);
+                this.log.push(`${casterChar.name}'s damage output is reduced by ${flatReduction} due to Female Bug marking!`);
+              }
+            }
+
             // --- NEW: Enhanced Chakra Leach damage ---
             if (skill.name === 'Chakra Leach') {
               const enhancedStatus = casterChar.statuses.find(s => s.status === 'chakra_leach_enhanced');
@@ -566,25 +578,34 @@ class Game {
         }
         this.log.push(`${char.name}'s destructible defense regenerated to ${permanentDefense.max_value}.`);
       }
-      
-      // --- NEW: Process Female Bug mark reactions ---
-      const femaleBugMarks = char.statuses.filter(s => s.status === 'female_bug_mark');
-      femaleBugMarks.forEach(mark => {
-        if (mark.harmful_skill_used_this_turn) {
-          // Apply damage reduction to the marked character
-          char.statuses.push({
-            status: 'damage_reduction',
-            value: 5,
-            duration: 4,
-            applies_to: 'non_affliction',
-            source: 'female_bug_mark',
-            reduction_type: 'flat'
-          });
-          this.log.push(`${char.name} suffers reduced damage output due to Female Bug marking!`);
-          mark.harmful_skill_used_this_turn = false;
-        }
-      });
     });
+
+    // --- NEW: Process Female Bug mark reactions on opponent's team ---
+    const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+    const opponentPlayer = this.players[opponentId];
+    
+    if (opponentPlayer) {
+      opponentPlayer.team.forEach(char => {
+        if (!char.isAlive) return;
+        
+        const femaleBugMarks = char.statuses.filter(s => s.status === 'female_bug_mark');
+        femaleBugMarks.forEach(mark => {
+          if (mark.harmful_skill_used_this_turn) {
+            // Apply outgoing damage reduction to the marked character
+            char.statuses.push({
+              status: 'outgoing_damage_reduction',
+              value: 5,
+              duration: 4,
+              applies_to: 'non_affliction',
+              source: 'female_bug_mark',
+              reduction_type: 'flat'
+            });
+            this.log.push(`${char.name} suffers reduced damage output due to Female Bug marking!`);
+            mark.harmful_skill_used_this_turn = false;
+          }
+        });
+      });
+    }
 
     // First, check for persistent AoE damage effects
     const casterInstanceIds = [];
