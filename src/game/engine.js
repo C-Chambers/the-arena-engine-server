@@ -4,6 +4,25 @@ const { getCharacters, getChakraTypes } = require('../services/characterService'
 const { processGameResults } = require('../services/missionService');
 const { v4: uuidv4 } = require('uuid');
 
+// --- NEW: Harmful skill detection function ---
+function isSkillHarmful(skill) {
+  return skill.effects.some(effect => {
+    switch(effect.type) {
+      case 'damage':
+        return true;
+      case 'apply_status':
+        // Check if status is harmful (negative effects)
+        const harmfulStatuses = ['poison', 'stun', 'vulnerable', 'damage_reduction_enemy', 'chakra_drain', 'female_bug_mark'];
+        return harmfulStatuses.includes(effect.status);
+      case 'steal_chakra':
+      case 'remove_chakra':
+        return true;
+      default:
+        return false;
+    }
+  });
+}
+
 class Game {
   constructor(player1Info, player2Info) {
     this.gameId = uuidv4();
@@ -19,6 +38,54 @@ class Game {
     this.activePlayerId = player1Info.id;
     this.isGameOver = false;
     this.log = [];
+  }
+
+  // --- NEW: Destructible Defense System ---
+  applyToDestructibleDefense(target, damage) {
+    const destructibleDefense = target.statuses.find(s => s.status === 'destructible_defense');
+    if (destructibleDefense && destructibleDefense.value > 0) {
+      if (destructibleDefense.value >= damage) {
+        // Defense absorbs all damage
+        destructibleDefense.value -= damage;
+        this.log.push(`${target.name}'s destructible defense absorbed ${damage} damage.`);
+        return 0; // No damage to HP
+      } else {
+        // Defense is broken, remaining damage goes to HP
+        const remainingDamage = damage - destructibleDefense.value;
+        this.log.push(`${target.name}'s destructible defense is destroyed!`);
+        destructibleDefense.value = 0;
+        return remainingDamage;
+      }
+    } else {
+      // No destructible defense, all damage goes to HP
+      return damage;
+    }
+  }
+
+  // --- NEW: Apply damage reduction logic ---
+  applyDamageReduction(target, damage) {
+    const reductionStatuses = target.statuses.filter(s => s.status === 'damage_reduction');
+    let reducedDamage = damage;
+    
+    if (reductionStatuses.length > 0) {
+      // First, apply flat reduction
+      const flatReduction = reductionStatuses
+        .filter(s => !s.reduction_type || s.reduction_type === 'flat')
+        .reduce((sum, status) => sum + status.value, 0);
+      reducedDamage = Math.max(0, reducedDamage - flatReduction);
+      if (flatReduction > 0) this.log.push(`${target.name}'s damage reduction lowered damage by ${flatReduction}.`);
+      
+      // Then, apply percentage reduction to the remaining damage
+      const percentageReductionStatuses = reductionStatuses.filter(s => s.reduction_type === 'percentage');
+      if (percentageReductionStatuses.length > 0) {
+        const totalPercentageReduction = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
+        const damageReduced = Math.round(reducedDamage * totalPercentageReduction);
+        reducedDamage = Math.max(0, reducedDamage - damageReduced);
+        this.log.push(`${target.name}'s percentage damage reduction lowered damage by ${Math.round(totalPercentageReduction * 100)}%.`);
+      }
+    }
+    
+    return reducedDamage;
   }
 
   generateChakra() {
@@ -216,6 +283,14 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
+    // --- NEW: Track harmful skill usage for Female Bug marks ---
+    if (isSkillHarmful(skill)) {
+      const femaleBugMarks = casterChar.statuses.filter(s => s.status === 'female_bug_mark');
+      femaleBugMarks.forEach(mark => {
+        mark.harmful_skill_used_this_turn = true;
+      });
+    }
+    
     // --- UPDATED: Targeted Stun Logic ---
     const stunStatuses = casterChar.statuses.filter(s => s.status === 'stun');
     if (stunStatuses.length > 0) {
@@ -295,6 +370,37 @@ class Game {
                 this.log.push(`${casterChar.name}'s ${skill.name} is empowered, dealing extra damage!`);
             }
 
+            // --- NEW: Outgoing Damage Reduction (Female Bug marking effect) ---
+            const outgoingReductionStatuses = casterChar.statuses.filter(s => s.status === 'outgoing_damage_reduction');
+            if (outgoingReductionStatuses.length > 0 && effect.damage_type !== 'affliction') {
+              const flatReduction = outgoingReductionStatuses
+                .filter(s => !s.reduction_type || s.reduction_type === 'flat')
+                .reduce((sum, status) => sum + status.value, 0);
+              if (flatReduction > 0) {
+                damageToDeal = Math.max(0, damageToDeal - flatReduction);
+                this.log.push(`${casterChar.name}'s damage output is reduced by ${flatReduction} due to Female Bug marking!`);
+              }
+            }
+
+            // --- NEW: Enhanced Chakra Leach damage ---
+            if (skill.name === 'Chakra Leach') {
+              const enhancedStatus = casterChar.statuses.find(s => s.status === 'chakra_leach_enhanced');
+              if (enhancedStatus && enhancedStatus.enhanced_damage) {
+                damageToDeal = enhancedStatus.enhanced_damage;
+                this.log.push(`${casterChar.name}'s Chakra Leach is enhanced, dealing increased damage!`);
+              }
+            }
+
+            // --- NEW: Conditional damage bonuses for Female Bug marks ---
+            const femaleBugMarks = target.statuses.filter(s => s.status === 'female_bug_mark');
+            if (femaleBugMarks.length > 0 && effect.conditional_bonus) {
+              if (effect.conditional_bonus.status_required === 'female_bug_mark' && skill.name === 'Chakra Leach') {
+                const totalBonus = femaleBugMarks.reduce((sum, mark) => sum + (mark.stack_count || 1), 0) * effect.conditional_bonus.bonus_per_stack;
+                damageToDeal += totalBonus;
+                this.log.push(`${target.name} is marked by Female Bugs! ${skill.name} deals ${totalBonus} bonus damage!`);
+              }
+            }
+
             // --- UPDATED: Conditional Damage for Sharingan Mark (Step 1.3) ---
             const sharinganMark = target.statuses.find(s => s.status === 'sharingan_mark' && s.casterInstanceId === casterId);
             if (sharinganMark) {
@@ -310,43 +416,46 @@ class Game {
             const vulnerableStatus = target.statuses.find(s => s.status === 'vulnerable');
             if(vulnerableStatus) damageToDeal = Math.round(damageToDeal * vulnerableStatus.value);
 
-            // --- UPDATED: Damage Reduction Logic (Step 1.2) ---
-            const reductionStatuses = target.statuses.filter(s => s.status === 'damage_reduction');
-            if (reductionStatuses.length > 0) {
-                // First, apply flat reduction
-                const flatReduction = reductionStatuses
-                    .filter(s => !s.reduction_type || s.reduction_type === 'flat')
-                    .reduce((sum, status) => sum + status.value, 0);
-                damageToDeal = Math.max(0, damageToDeal - flatReduction);
-                if (flatReduction > 0) this.log.push(`${target.name}'s damage reduction lowered damage by ${flatReduction}.`);
-                
-                // Then, apply percentage reduction to the remaining damage (Step 1.2)
-                const percentageReductionStatuses = reductionStatuses.filter(s => s.reduction_type === 'percentage');
-                if (percentageReductionStatuses.length > 0) {
-                    const totalPercentageReduction = percentageReductionStatuses.reduce((sum, status) => sum + status.value, 0);
-                    // Apply percentage reduction (value like 0.25 means 25% reduction)
-                    const damageReduced = Math.round(damageToDeal * totalPercentageReduction);
-                    damageToDeal = Math.max(0, damageToDeal - damageReduced);
-                    this.log.push(`${target.name}'s percentage damage reduction lowered damage by ${Math.round(totalPercentageReduction * 100)}%.`);
-                }
-            }
-            
-            const initialDamage = damageToDeal; 
-            if (!effect.ignores_shield) {
+            const initialDamage = damageToDeal;
+
+            // --- NEW: Enhanced Damage System with damage types ---
+            if (effect.damage_type === 'affliction') {
+              // Affliction damage bypasses both damage reduction AND destructible defense
+              target.currentHp -= damageToDeal;
+              this.log.push(`${target.name} took ${damageToDeal} affliction damage (bypassing all defenses).`);
+            } else if (effect.damage_type === 'piercing') {
+              // Piercing bypasses damage reduction but still hits destructible defense
+              const finalDamage = this.applyToDestructibleDefense(target, damageToDeal);
+              if (finalDamage > 0) {
+                target.currentHp -= finalDamage;
+                this.log.push(`${target.name} took ${finalDamage} piercing damage.`);
+              }
+            } else {
+              // Normal damage - apply reduction, then destructible defense, then HP
+              damageToDeal = this.applyDamageReduction(target, damageToDeal);
+              
+              if (!effect.ignores_shield) {
                 const shield = target.statuses.find(s => s.status === 'shield');
                 if(shield) {
-                    if(shield.value >= damageToDeal) {
-                        shield.value -= damageToDeal;
-                        damageToDeal = 0;
-                    } else {
-                        damageToDeal -= shield.value;
-                        target.statuses = target.statuses.filter(s => s.status !== 'shield');
-                    }
+                  if(shield.value >= damageToDeal) {
+                    shield.value -= damageToDeal;
+                    damageToDeal = 0;
+                  } else {
+                    damageToDeal -= shield.value;
+                    target.statuses = target.statuses.filter(s => s.status !== 'shield');
+                  }
                 }
+              }
+
+              const finalDamage = this.applyToDestructibleDefense(target, damageToDeal);
+              if (finalDamage > 0) {
+                target.currentHp -= finalDamage;
+                this.log.push(`${target.name} took ${finalDamage} damage.`);
+              }
             }
-            if (damageToDeal > 0) target.currentHp -= damageToDeal;
+
             this.stats[this.activePlayerId].damageDealt += initialDamage;
-            this.log.push(`${target.name} took ${initialDamage} damage.`);
+            
             if (target.currentHp <= 0) {
               target.isAlive = false;
               target.currentHp = 0;
@@ -364,19 +473,81 @@ class Game {
             target.statuses.push({ type: 'shield', value: effect.value });
             this.log.push(`${target.name} gained a ${effect.value} HP shield.`);
             break;
+          case 'steal_chakra':
+            // --- NEW: Chakra Stealing System ---
+            // Check if this is an enhanced Chakra Leach that shouldn't steal
+            const isEnhanced = casterChar.statuses.some(s => s.status === 'chakra_leach_enhanced');
+            const shouldSkipSteal = effect.condition === 'not_enhanced' && isEnhanced;
+            
+            if (!shouldSkipSteal) {
+              const targetPlayer = Object.values(this.players).find(p => p.team.some(c => c.instanceId === target.instanceId));
+              if (targetPlayer) {
+                const availableChakra = Object.keys(targetPlayer.chakra).filter(type => 
+                  targetPlayer.chakra[type] > 0 && 
+                  (effect.chakra_types ? effect.chakra_types.includes(type) : true)
+                );
+                
+                if (availableChakra.length > 0) {
+                  const randomType = availableChakra[Math.floor(Math.random() * availableChakra.length)];
+                  const stealAmount = Math.min(effect.amount, targetPlayer.chakra[randomType]);
+                  
+                  // Remove from target
+                  targetPlayer.chakra[randomType] -= stealAmount;
+                  
+                  // Add to caster
+                  const casterPlayer = this.players[this.activePlayerId];
+                  casterPlayer.chakra[randomType] = (casterPlayer.chakra[randomType] || 0) + stealAmount;
+                  
+                  this.log.push(`${casterChar.name} stole ${stealAmount} ${randomType} chakra from ${target.name}.`);
+                } else {
+                  this.log.push(`${target.name} has no chakra to steal!`);
+                }
+              }
+            } else {
+              this.log.push(`${casterChar.name}'s enhanced Chakra Leach doesn't steal chakra this turn.`);
+            }
+            break;
           case 'apply_status':
-            // --- NEW: Stamping the debuff with the caster's ID ---
-            const newStatus = {
+            // --- NEW: Enhanced status application with stacking support ---
+            const existingStatusIndex = target.statuses.findIndex(s => 
+              s.status === effect.status && effect.stacks
+            );
+            
+            if (existingStatusIndex !== -1 && effect.stacks) {
+              // Increase stack count for stacking status
+              target.statuses[existingStatusIndex].stack_count = 
+                (target.statuses[existingStatusIndex].stack_count || 1) + 1;
+              // Reset duration
+              target.statuses[existingStatusIndex].duration = effect.duration;
+              this.log.push(`${target.name}'s ${effect.status} increased to ${target.statuses[existingStatusIndex].stack_count} stacks.`);
+            } else {
+              // Add new status
+              const newStatus = {
                 ...effect,
+                stack_count: effect.stacks ? 1 : undefined,
                 casterInstanceId: casterId, // Add the caster's unique ID to the status
                 sourceSkill: {
-                    id: skill.id,
-                    name: skill.name,
-                    iconUrl: skill.icon_url,
+                  id: skill.id,
+                  name: skill.name,
+                  iconUrl: skill.icon_url,
                 }
-            };
-            target.statuses.push(newStatus);
-            this.log.push(`${target.name} is now affected by ${effect.status}.`);
+              };
+              target.statuses.push(newStatus);
+              this.log.push(`${target.name} is now affected by ${effect.status}.`);
+              
+              // --- NEW: If applying permanent destructible defense, immediately create the destructible defense ---
+              if (effect.status === 'permanent_destructible_defense' && effect.max_value) {
+                const existingDD = target.statuses.find(s => s.status === 'destructible_defense');
+                if (!existingDD) {
+                  target.statuses.push({
+                    status: 'destructible_defense',
+                    value: effect.max_value,
+                    type: 'defense'
+                  });
+                  this.log.push(`${target.name} gains ${effect.max_value} destructible defense.`);
+                }
+              }
+            }
             break;
         }
       });
@@ -389,6 +560,53 @@ class Game {
   }
 
   processTurnBasedEffects(player) {
+    // --- NEW: Regenerate permanent destructible defense ---
+    player.team.forEach(char => {
+      if (!char.isAlive) return;
+      
+      const permanentDefense = char.statuses.find(s => s.status === 'permanent_destructible_defense');
+      if (permanentDefense) {
+        let destructibleDefense = char.statuses.find(s => s.status === 'destructible_defense');
+        if (destructibleDefense) {
+          destructibleDefense.value = permanentDefense.max_value;
+        } else {
+          char.statuses.push({
+            status: 'destructible_defense',
+            value: permanentDefense.max_value,
+            type: 'defense'
+          });
+        }
+        this.log.push(`${char.name}'s destructible defense regenerated to ${permanentDefense.max_value}.`);
+      }
+    });
+
+    // --- NEW: Process Female Bug mark reactions on opponent's team ---
+    const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
+    const opponentPlayer = this.players[opponentId];
+    
+    if (opponentPlayer) {
+      opponentPlayer.team.forEach(char => {
+        if (!char.isAlive) return;
+        
+        const femaleBugMarks = char.statuses.filter(s => s.status === 'female_bug_mark');
+        femaleBugMarks.forEach(mark => {
+          if (mark.harmful_skill_used_this_turn) {
+            // Apply outgoing damage reduction to the marked character
+            char.statuses.push({
+              status: 'outgoing_damage_reduction',
+              value: 5,
+              duration: 4,
+              applies_to: 'non_affliction',
+              source: 'female_bug_mark',
+              reduction_type: 'flat'
+            });
+            this.log.push(`${char.name} suffers reduced damage output due to Female Bug marking!`);
+            mark.harmful_skill_used_this_turn = false;
+          }
+        });
+      });
+    }
+
     // First, check for persistent AoE damage effects
     const casterInstanceIds = [];
     player.team.forEach(char => {
