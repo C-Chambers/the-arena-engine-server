@@ -283,6 +283,14 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
+    // --- NEW: Track harmful skill usage for Female Bug marks ---
+    if (isSkillHarmful(skill)) {
+      const femaleBugMarks = casterChar.statuses.filter(s => s.status === 'female_bug_mark');
+      femaleBugMarks.forEach(mark => {
+        mark.harmful_skill_used_this_turn = true;
+      });
+    }
+    
     // --- UPDATED: Targeted Stun Logic ---
     const stunStatuses = casterChar.statuses.filter(s => s.status === 'stun');
     if (stunStatuses.length > 0) {
@@ -540,25 +548,6 @@ class Game {
   }
 
   processTurnBasedEffects(player) {
-    // --- NEW: Track harmful skill usage for Female Bug marks ---
-    const opponentId = Object.keys(this.players).find(id => parseInt(id, 10) !== this.activePlayerId);
-    const opponentPlayer = this.players[opponentId];
-    
-    if (opponentPlayer && opponentPlayer.actionQueue) {
-      opponentPlayer.actionQueue.forEach(action => {
-        if (isSkillHarmful(action.skill)) {
-          // Find the caster and mark them for Female Bug tracking
-          const caster = opponentPlayer.team.find(c => c.instanceId === action.casterId);
-          if (caster) {
-            const femaleBugMarks = caster.statuses.filter(s => s.status === 'female_bug_mark');
-            femaleBugMarks.forEach(mark => {
-              mark.harmful_skill_used_this_turn = true;
-            });
-          }
-        }
-      });
-    }
-
     // --- NEW: Regenerate permanent destructible defense ---
     player.team.forEach(char => {
       if (!char.isAlive) return;
