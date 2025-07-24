@@ -595,12 +595,12 @@ class Game {
             char.statuses.push({
               status: 'outgoing_damage_reduction',
               value: 5,
-              duration: 4,
+              duration: 1,
               applies_to: 'non_affliction',
               source: 'female_bug_mark',
               reduction_type: 'flat'
             });
-            this.log.push(`${char.name} suffers reduced damage output due to Female Bug marking!`);
+            this.log.push(`${char.name} suffers reduced damage output for 1 turn due to Female Bug marking!`);
             mark.harmful_skill_used_this_turn = false;
           }
         });
