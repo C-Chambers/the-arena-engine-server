@@ -283,11 +283,7 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
-    // DEBUG: Log all skill executions
-    console.log(`DEBUG: Executing skill ${skill.name} by ${casterChar.name}`);
-    if (skill.effects.some(e => e.type === 'apply_status' && e.status === 'invulnerable')) {
-      console.log(`DEBUG: This skill contains invulnerable effect!`);
-    }
+
     
     // --- NEW: Track harmful skill usage for Female Bug marks ---
     if (isSkillHarmful(skill)) {
@@ -381,11 +377,7 @@ class Game {
         const isDefensiveEffect = effect.type === 'add_shield' || (effect.type === 'apply_status' && 
             (effect.status === 'damage_reduction' || effect.status === 'invulnerable'));
         
-        // DEBUG: Log for invulnerable status specifically
-        if (effect.type === 'apply_status' && effect.status === 'invulnerable') {
-            console.log(`DEBUG: Attempting to apply invulnerable to ${target.name}. Has Dynamic Air Mark: ${hasDynamicAirMark}`);
-            this.log.push(`DEBUG: Attempting to apply invulnerable to ${target.name}. Has Dynamic Air Mark: ${hasDynamicAirMark}`);
-        }
+
         
         if (hasDynamicAirMark && isDefensiveEffect) {
             this.log.push(`${target.name} is marked by Dynamic Air Marking and cannot receive defensive benefits!`);
@@ -550,11 +542,7 @@ class Game {
             }
             break;
           case 'apply_status':
-            // DEBUG: Log when we reach apply_status case for invulnerable
-            if (effect.status === 'invulnerable') {
-                console.log(`DEBUG: Reached apply_status case for invulnerable on ${target.name}`);
-                this.log.push(`DEBUG: Reached apply_status case for invulnerable on ${target.name}`);
-            }
+
             
             // --- NEW: Enhanced status application with stacking support ---
             const existingStatusIndex = target.statuses.findIndex(s => 
@@ -583,11 +571,7 @@ class Game {
               target.statuses.push(newStatus);
               this.log.push(`${target.name} is now affected by ${effect.status}.`);
               
-              // DEBUG: Additional confirmation for invulnerable
-              if (effect.status === 'invulnerable') {
-                  console.log(`DEBUG: Successfully added invulnerable status to ${target.name}. Status count: ${target.statuses.length}`);
-                  this.log.push(`DEBUG: Successfully added invulnerable status to ${target.name}. Status count: ${target.statuses.length}`);
-              }
+
               
               // --- NEW: If applying permanent destructible defense, immediately create the destructible defense ---
               if (effect.status === 'permanent_destructible_defense' && effect.max_value) {
@@ -796,6 +780,17 @@ class Game {
     if (isInitial) {
         this.generateChakra();
     }
+    
+    // DEBUG: Log character statuses being sent to client
+    Object.values(this.players).forEach(player => {
+      player.team.forEach(char => {
+        const invulnerableStatus = char.statuses.find(s => s.status === 'invulnerable');
+        if (invulnerableStatus) {
+          console.log(`DEBUG: Sending invulnerable status for ${char.name}:`, JSON.stringify(invulnerableStatus, null, 2));
+        }
+      });
+    });
+    
     return {
       gameId: this.gameId,
       turn: this.turn,
