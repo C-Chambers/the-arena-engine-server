@@ -283,6 +283,12 @@ class Game {
 
     if (!casterChar || !casterChar.isAlive) return;
     
+    // DEBUG: Log all skill executions
+    console.log(`DEBUG: Executing skill ${skill.name} by ${casterChar.name}`);
+    if (skill.effects.some(e => e.type === 'apply_status' && e.status === 'invulnerable')) {
+      console.log(`DEBUG: This skill contains invulnerable effect!`);
+    }
+    
     // --- NEW: Track harmful skill usage for Female Bug marks ---
     if (isSkillHarmful(skill)) {
       const femaleBugMarks = casterChar.statuses.filter(s => s.status === 'female_bug_mark');
@@ -377,6 +383,7 @@ class Game {
         
         // DEBUG: Log for invulnerable status specifically
         if (effect.type === 'apply_status' && effect.status === 'invulnerable') {
+            console.log(`DEBUG: Attempting to apply invulnerable to ${target.name}. Has Dynamic Air Mark: ${hasDynamicAirMark}`);
             this.log.push(`DEBUG: Attempting to apply invulnerable to ${target.name}. Has Dynamic Air Mark: ${hasDynamicAirMark}`);
         }
         
@@ -545,6 +552,7 @@ class Game {
           case 'apply_status':
             // DEBUG: Log when we reach apply_status case for invulnerable
             if (effect.status === 'invulnerable') {
+                console.log(`DEBUG: Reached apply_status case for invulnerable on ${target.name}`);
                 this.log.push(`DEBUG: Reached apply_status case for invulnerable on ${target.name}`);
             }
             
@@ -577,6 +585,7 @@ class Game {
               
               // DEBUG: Additional confirmation for invulnerable
               if (effect.status === 'invulnerable') {
+                  console.log(`DEBUG: Successfully added invulnerable status to ${target.name}. Status count: ${target.statuses.length}`);
                   this.log.push(`DEBUG: Successfully added invulnerable status to ${target.name}. Status count: ${target.statuses.length}`);
               }
               
