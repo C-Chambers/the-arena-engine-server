@@ -374,6 +374,12 @@ class Game {
         const hasDynamicAirMark = target.statuses.some(s => s.status === 'dynamic_air_mark');
         const isDefensiveEffect = effect.type === 'add_shield' || (effect.type === 'apply_status' && 
             (effect.status === 'damage_reduction' || effect.status === 'invulnerable'));
+        
+        // DEBUG: Log for invulnerable status specifically
+        if (effect.type === 'apply_status' && effect.status === 'invulnerable') {
+            this.log.push(`DEBUG: Attempting to apply invulnerable to ${target.name}. Has Dynamic Air Mark: ${hasDynamicAirMark}`);
+        }
+        
         if (hasDynamicAirMark && isDefensiveEffect) {
             this.log.push(`${target.name} is marked by Dynamic Air Marking and cannot receive defensive benefits!`);
             return;
@@ -537,6 +543,11 @@ class Game {
             }
             break;
           case 'apply_status':
+            // DEBUG: Log when we reach apply_status case for invulnerable
+            if (effect.status === 'invulnerable') {
+                this.log.push(`DEBUG: Reached apply_status case for invulnerable on ${target.name}`);
+            }
+            
             // --- NEW: Enhanced status application with stacking support ---
             const existingStatusIndex = target.statuses.findIndex(s => 
               s.status === effect.status && effect.stacks
@@ -563,6 +574,11 @@ class Game {
               };
               target.statuses.push(newStatus);
               this.log.push(`${target.name} is now affected by ${effect.status}.`);
+              
+              // DEBUG: Additional confirmation for invulnerable
+              if (effect.status === 'invulnerable') {
+                  this.log.push(`DEBUG: Successfully added invulnerable status to ${target.name}. Status count: ${target.statuses.length}`);
+              }
               
               // --- NEW: If applying permanent destructible defense, immediately create the destructible defense ---
               if (effect.status === 'permanent_destructible_defense' && effect.max_value) {
